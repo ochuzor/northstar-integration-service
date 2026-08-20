@@ -1,0 +1,49 @@
+# Maven build output (including all future modules)
+**/target/
+
+# Local logs and JVM crash reports
+*.log
+hs_err_pid*
+replay_pid*
+
+# Local environment and secret files
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+*.pem
+*.key
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Eclipse and Spring Tool Suite
+.apt_generated/
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache/
+
+# VS Code local workspace settings
+.vscode/
+
+# NetBeans
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+
+# Operating-system metadata
+.DS_Store
+Thumbs.db
+
+# Local Codex/agent workspace state
+.agents/
+.codex/
