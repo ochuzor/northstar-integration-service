@@ -14,4 +14,15 @@
     <modules>
         <module>integration-service</module>
     </modules>
+
+    <build>
+        <plugins>
+            <!-- Makes spotless:* commands discoverable from the repository root. -->
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>3.9.0</version>
+            </plugin>
+        </plugins>
+    </build>
 </project>

@@ -31,8 +31,10 @@ replay_pid*
 .springBeans
 .sts4-cache/
 
-# VS Code local workspace settings
-.vscode/
+# VS Code local workspace settings (share only the team configuration)
+/.vscode/*
+!/.vscode/settings.json
+!/.vscode/extensions.json
 
 # NetBeans
 nbproject/private/

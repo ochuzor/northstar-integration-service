@@ -21,10 +21,7 @@ public final class SalesforceOAuthProperties {
     @NotBlank
     private final String clientSecret;
 
-    public SalesforceOAuthProperties(
-             URI tokenUrl,
-            String clientId,
-            String clientSecret) {
+    public SalesforceOAuthProperties(URI tokenUrl, String clientId, String clientSecret) {
         this.tokenUrl = tokenUrl;
         this.clientId = clientId;
         this.clientSecret = clientSecret;

@@ -8,8 +8,8 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 @SpringBootApplication
 public class IntegrationServiceApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(IntegrationServiceApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(IntegrationServiceApplication.class, args);
+    }
 
 }

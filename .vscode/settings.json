@@ -1,0 +1,15 @@
+{
+    "[java]": {
+        "editor.defaultFormatter": "redhat.java",
+        "editor.formatOnSave": true,
+        "editor.detectIndentation": false,
+        "editor.insertSpaces": true,
+        "editor.tabSize": 4
+    },
+    "java.format.enabled": true,
+    "java.format.settings.url": "${workspaceFolder}/config/formatter/eclipse-java-formatter.xml",
+    "java.format.settings.profile": "Northstar",
+    "files.insertFinalNewline": true,
+    "files.trimTrailingWhitespace": true,
+    "java.compile.nullAnalysis.mode": "automatic"
+}

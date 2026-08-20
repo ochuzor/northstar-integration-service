@@ -104,6 +104,8 @@ Until explicitly brought into scope:
 - Salesforce OAuth settings bind through validated typed configuration. Missing
   or blank required values and malformed token URLs fail during startup, while
   focused tests use synthetic values and require no live credentials.
+- Spotless enforces the committed Eclipse formatter profile during Maven
+  verification, and committed VS Code settings use the same profile on save.
 
 ## Current architecture
 
@@ -121,6 +123,7 @@ Initial technical baseline:
 - Spring Web
 - Jackson
 - Jakarta Validation
+- Spotless with a shared Eclipse formatter profile
 
 Kafka, PostgreSQL, JPA, Flyway, Testcontainers, and stub-server dependencies
 must be added only when their roadmap slice begins.
@@ -172,6 +175,9 @@ implementing the dedicated `RestClient` token-client boundary.
   `businessId`, and `billingCity`.
 - The Salesforce Account business-ID field has the API name `Business_ID__c`.
 - Salesforce HTTP communication will use Spring's synchronous `RestClient`.
+- Java formatting uses the repository's `Northstar` Eclipse profile in both
+  Spotless and VS Code; `./mvnw spotless:check` verifies it and
+  `./mvnw spotless:apply` fixes it.
 
 ### Pending
 
