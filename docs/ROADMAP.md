@@ -50,14 +50,16 @@ distributed reliability only after the happy path exists.
 
 ### Build
 
-- Bind and validate Salesforce configuration.
+- Bound and validated Salesforce OAuth configuration using environment-backed
+  typed properties.
 - Request and deserialize an access token through a dedicated client boundary.
 - Expose the result only as safe metadata; never return or log the token.
 - Handle non-2xx, malformed, and unavailable-auth-server responses.
 
 ### Test
 
-- Focused configuration tests.
+- Added focused configuration tests for successful binding, missing or blank
+  required values, and malformed token-URL conversion.
 - Stub-server tests for success and representative OAuth failures.
 - One deliberate live Salesforce smoke test outside the default automated
   suite.

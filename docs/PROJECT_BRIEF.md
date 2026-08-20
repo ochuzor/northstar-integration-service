@@ -101,6 +101,9 @@ Until explicitly brought into scope:
   context-load test and executable JAR repackaging.
 - Durable ignore rules and a placeholder-only `.env.example` protect and
   document the local Salesforce configuration boundary.
+- Salesforce OAuth settings bind through validated typed configuration. Missing
+  or blank required values and malformed token URLs fail during startup, while
+  focused tests use synthetic values and require no live credentials.
 
 ## Current architecture
 
@@ -139,9 +142,8 @@ The MVP is finished when:
 
 ## Next task
 
-Begin Milestone 1 by learning the OAuth 2.0 Client Credentials exchange, then
-design the typed Salesforce configuration boundary before implementing the
-token client.
+Continue Milestone 1 by defining the Salesforce token response contract and
+implementing the dedicated `RestClient` token-client boundary.
 
 ## Important decisions
 
@@ -169,6 +171,7 @@ token client.
 - The initial safe Account response contains `salesforceAccountId`, `name`,
   `businessId`, and `billingCity`.
 - The Salesforce Account business-ID field has the API name `Business_ID__c`.
+- Salesforce HTTP communication will use Spring's synchronous `RestClient`.
 
 ### Pending
 
