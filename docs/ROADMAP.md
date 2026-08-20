@@ -52,6 +52,8 @@ distributed reliability only after the happy path exists.
 
 - Bound and validated Salesforce OAuth configuration using environment-backed
   typed properties.
+- Defined the external token-response DTO and mapped its safe metadata,
+  including issued-at epoch milliseconds, to an authentication result.
 - Request and deserialize an access token through a dedicated client boundary.
 - Expose the result only as safe metadata; never return or log the token.
 - Handle non-2xx, malformed, and unavailable-auth-server responses.

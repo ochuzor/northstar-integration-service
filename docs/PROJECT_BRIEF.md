@@ -104,6 +104,9 @@ Until explicitly brought into scope:
 - Salesforce OAuth settings bind through validated typed configuration. Missing
   or blank required values and malformed token URLs fail during startup, while
   focused tests use synthetic values and require no live credentials.
+- The Salesforce token-response DTO and safe authentication-result contract are
+  separate, and issued-at epoch milliseconds map explicitly to `Instant`
+  without copying the access token or instance URL into the safe result.
 - Spotless enforces the committed Eclipse formatter profile during Maven
   verification, and committed VS Code settings use the same profile on save.
 
@@ -145,8 +148,9 @@ The MVP is finished when:
 
 ## Next task
 
-Continue Milestone 1 by defining the Salesforce token response contract and
-implementing the dedicated `RestClient` token-client boundary.
+Continue Milestone 1 by implementing the form-encoded Salesforce token request
+through the dedicated `RestClient` boundary and testing it against a stub HTTP
+server.
 
 ## Important decisions
 
