@@ -107,6 +107,25 @@ Until explicitly brought into scope:
 - The Salesforce token-response DTO and safe authentication-result contract are
   separate, and issued-at epoch milliseconds map explicitly to `Instant`
   without copying the access token or instance URL into the safe result.
+- The Salesforce OAuth client sends a client-credentials token request as
+  `application/x-www-form-urlencoded` through Spring's `RestClient`. A focused
+  stubbed-HTTP test verifies the request and safe response mapping without live
+  Salesforce access.
+- HTTP-client DEBUG logging is explicitly suppressed so the form-encoded
+  client secret is not exposed even when broader application debugging is
+  enabled.
+- Salesforce client-error OAuth responses are translated into a sanitized
+  `SalesforceAuthenticationException` containing a structured HTTP status code;
+  remote response bodies and credentials are not exposed.
+- Malformed JSON and incomplete successful token responses are rejected as
+  sanitized authentication failures rather than leaking JSON, null, or numeric
+  conversion exceptions.
+- OAuth server `5xx` responses are translated into sanitized authentication
+  failures with their real status code, while connection failures are reported
+  through a separate safe unavailable-server exception.
+- A tagged, opt-in Java smoke test has authenticated successfully against the
+  Salesforce test organization. The default Maven verification excludes that
+  live test and remains deterministic without Salesforce credentials.
 - Spotless enforces the committed Eclipse formatter profile during Maven
   verification, and committed VS Code settings use the same profile on save.
 
@@ -148,9 +167,9 @@ The MVP is finished when:
 
 ## Next task
 
-Continue Milestone 1 by implementing the form-encoded Salesforce token request
-through the dedicated `RestClient` boundary and testing it against a stub HTTP
-server.
+Begin Milestone 2 by deciding how Salesforce REST API version and instance URL
+information will enter the Account client, then fetch one Account through a
+stubbed HTTP boundary.
 
 ## Important decisions
 
@@ -179,13 +198,18 @@ server.
   `businessId`, and `billingCity`.
 - The Salesforce Account business-ID field has the API name `Business_ID__c`.
 - Salesforce HTTP communication will use Spring's synchronous `RestClient`.
+- Token caching is deferred until repeated authenticated Salesforce requests
+  make its lifecycle necessary; the current client requests a token per
+  authentication call.
+- OAuth server `5xx` responses use `SalesforceAuthenticationException` with
+  their HTTP status, while connection failures use a separate
+  `SalesforceAuthenticationUnavailableException` because no HTTP status exists.
 - Java formatting uses the repository's `Northstar` Eclipse profile in both
   Spotless and VS Code; `./mvnw spotless:check` verifies it and
   `./mvnw spotless:apply` fixes it.
 
 ### Pending
 
-- HTTP client choice and token caching lifecycle.
 - Kafka topic and event-envelope contract.
 - Idempotency key and transaction boundary.
 - Retry ownership, retry limits, and dead-letter recovery workflow.

@@ -29,6 +29,7 @@
 	<properties>
 		<java.version>21</java.version>
 		<spotless-maven-plugin.version>3.9.0</spotless-maven-plugin.version>
+		<live-salesforce-excluded-tag>live-salesforce</live-salesforce-excluded-tag>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -50,6 +51,10 @@
 			<artifactId>spring-boot-starter-webmvc-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-restclient</artifactId>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -60,6 +65,10 @@
 				<version>${spotless-maven-plugin.version}</version>
 				<configuration>
 					<java>
+						<removeUnusedImports/>
+						<importOrder>
+							<order>java,javax,org,com</order>
+						</importOrder>
 						<eclipse>
 							<file>${maven.multiModuleProjectDirectory}/config/formatter/eclipse-java-formatter.xml</file>
 						</eclipse>
@@ -81,7 +90,22 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<excludedGroups>${live-salesforce-excluded-tag}</excludedGroups>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 
+	<profiles>
+		<profile>
+			<id>live-salesforce</id>
+			<properties>
+				<live-salesforce-excluded-tag></live-salesforce-excluded-tag>
+			</properties>
+		</profile>
+	</profiles>
 </project>

@@ -54,15 +54,33 @@ distributed reliability only after the happy path exists.
   typed properties.
 - Defined the external token-response DTO and mapped its safe metadata,
   including issued-at epoch milliseconds, to an authentication result.
-- Request and deserialize an access token through a dedicated client boundary.
-- Expose the result only as safe metadata; never return or log the token.
-- Handle non-2xx, malformed, and unavailable-auth-server responses.
+- Request and deserialize an access token through a dedicated `RestClient`
+  boundary using a form-encoded client-credentials request.
+- Expose the result only as safe metadata and suppress HTTP-client DEBUG logging
+  that could otherwise reveal the form-encoded client secret.
+- Translate client-error OAuth responses into a sanitized authentication
+  exception with the HTTP status code.
+- Reject malformed or incomplete successful token responses as sanitized
+  authentication failures.
+- Translate server-error responses into sanitized authentication failures with
+  their real HTTP status.
+- Translate connection failures into a separate safe unavailable-server
+  exception without inventing an HTTP status.
 
 ### Test
 
 - Added focused configuration tests for successful binding, missing or blank
   required values, and malformed token-URL conversion.
-- Stub-server tests for success and representative OAuth failures.
+- Added a stubbed-HTTP success test that verifies the token URL, POST method,
+  form content type, client-credentials fields, deserialization, and safe
+  result mapping.
+- Added a stubbed-HTTP test for a rejected client-credentials request, ensuring
+  its sanitized exception retains status `400` without leaking remote error
+  details or credentials.
+- Added stubbed-HTTP tests for malformed JSON and incomplete successful token
+  responses, both producing sanitized exceptions with status `200`.
+- Added a stubbed `503` server-error test and a stubbed connection-failure test
+  for the unavailable authentication server case.
 - One deliberate live Salesforce smoke test outside the default automated
   suite.
 
@@ -71,6 +89,10 @@ distributed reliability only after the happy path exists.
 - Authentication works from Java against the test Salesforce organization.
 - Default tests are deterministic and do not require Salesforce.
 - Secrets and tokens do not appear in source control or logs.
+
+**Status:** Complete. The default suite is deterministic and the separately
+tagged live smoke test authenticated successfully against the Salesforce test
+organization.
 
 ## Milestone 2 — Fetch one Salesforce Account
 
