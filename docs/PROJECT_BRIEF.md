@@ -204,6 +204,13 @@ stubbed HTTP boundary.
 - OAuth server `5xx` responses use `SalesforceAuthenticationException` with
   their HTTP status, while connection failures use a separate
   `SalesforceAuthenticationUnavailableException` because no HTTP status exists.
+- Salesforce OAuth will expose a separate immutable internal
+  `SalesforceSession` for trusted Salesforce clients. It will contain the
+  access token and instance URL without a generated token-leaking `toString()`,
+  while `SalesforceAuthenticationResult` remains the safe representation.
+- The OAuth client now creates validated internal Salesforce sessions while
+  retaining its safe authentication-result method for callers that must not
+  access credentials.
 - Java formatting uses the repository's `Northstar` Eclipse profile in both
   Spotless and VS Code; `./mvnw spotless:check` verifies it and
   `./mvnw spotless:apply` fixes it.

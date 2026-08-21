@@ -14,6 +14,7 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
+import com.northstar.integrationservice.salesforce.SalesforceSession;
 import com.northstar.integrationservice.salesforce.config.SalesforceOAuthProperties;
 
 @Component
@@ -27,33 +28,16 @@ public class SalesforceOAuthClient {
         this.properties = properties;
     }
 
-    SalesforceAuthenticationResult toAuthenticationResult(SalesforceTokenResponse response) {
-        if (response == null || !StringUtils.hasText(response.getAccessToken())
-                || response.getInstanceUrl() == null
-                || !StringUtils.hasText(response.getTokenType())
-                || !StringUtils.hasText(response.getIssuedAt())) {
-            throw new SalesforceAuthenticationException(
-                    "Salesforce returned an invalid authentication response",
-                    HttpStatus.OK.value());
-        }
-
-        long issuedAtMilliseconds;
-        try {
-
-            String issuedAtText = response.getIssuedAt();
-            issuedAtMilliseconds = Long.parseLong(issuedAtText);
-        } catch (NumberFormatException exception) {
-            throw new SalesforceAuthenticationException(
-                    "Salesforce returned an invalid authentication response",
-                    HttpStatus.OK.value());
-        }
-
-        Instant issuedAt = Instant.ofEpochMilli(issuedAtMilliseconds);
-
-        return new SalesforceAuthenticationResult(true, response.getTokenType(), issuedAt);
+    SalesforceAuthenticationResult toAuthenticationResult(SalesforceSession session) {
+        return new SalesforceAuthenticationResult(true, session.getTokenType(),
+                session.getIssuedAt());
     }
 
     public SalesforceAuthenticationResult authenticate() {
+        return toAuthenticationResult(authenticateSession());
+    }
+
+    public SalesforceSession authenticateSession() {
         MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
         form.add("grant_type", "client_credentials");
         form.add("client_id", properties.getClientId());
@@ -74,7 +58,7 @@ public class SalesforceOAuthClient {
                                 "Salesforce authentication server failed", status.value());
                     }).body(SalesforceTokenResponse.class);
 
-            return toAuthenticationResult(result);
+            return toSession(result);
         } catch (ResourceAccessException exception) {
             throw new SalesforceAuthenticationUnavailableException();
         } catch (RestClientException exception) {
@@ -86,5 +70,32 @@ public class SalesforceOAuthClient {
 
             throw exception;
         }
+    }
+
+    private SalesforceSession toSession(SalesforceTokenResponse response) {
+        if (response == null || !StringUtils.hasText(response.getAccessToken())
+                || response.getInstanceUrl() == null
+                || !StringUtils.hasText(response.getTokenType())
+                || response.getIssuedAt() == null) {
+            throw new SalesforceAuthenticationException(
+                    "Salesforce returned an invalid authentication response",
+                    HttpStatus.OK.value());
+        }
+
+        long issuedAtMilliseconds;
+        try {
+
+            String issuedAtText = response.getIssuedAt();
+            issuedAtMilliseconds = Long.parseLong(issuedAtText);
+        } catch (NumberFormatException exception) {
+            throw new SalesforceAuthenticationException(
+                    "Salesforce returned an invalid authentication response",
+                    HttpStatus.OK.value());
+        }
+
+        Instant issuedAt = Instant.ofEpochMilli(issuedAtMilliseconds);
+
+        return new SalesforceSession(response.getAccessToken(), response.getInstanceUrl(),
+                response.getTokenType(), issuedAt);
     }
 }

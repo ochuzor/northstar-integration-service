@@ -21,21 +21,23 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 
+import com.northstar.integrationservice.salesforce.SalesforceSession;
 import com.northstar.integrationservice.salesforce.config.SalesforceOAuthProperties;
 
 class SalesforceOAuthClientTest {
     @Test
-    void createsAuthenticationResult() {
+    void createsSafeAuthenticationResult() {
         SalesforceOAuthProperties properties = new SalesforceOAuthProperties(
                 URI.create("https://auth.example.test/services/oauth2/token"), "test-client",
                 "test-secret");
 
         SalesforceOAuthClient client = new SalesforceOAuthClient(RestClient.builder(), properties);
 
-        SalesforceTokenResponse tokenResponse = new SalesforceTokenResponse("token",
-                URI.create("http://example.com"), "Bearer", "1784563200000");
+        SalesforceSession session = new SalesforceSession("token",
+                URI.create("https://instance.example.test"), "Bearer",
+                Instant.ofEpochMilli(1_784_563_200_000L));
 
-        SalesforceAuthenticationResult result = client.toAuthenticationResult(tokenResponse);
+        SalesforceAuthenticationResult result = client.toAuthenticationResult(session);
 
         assertThat(result.authenticated()).isTrue();
         assertThat(result.tokenType()).isEqualTo("Bearer");
@@ -43,7 +45,7 @@ class SalesforceOAuthClientTest {
     }
 
     @Test
-    void authenticatesUsingClientCredentials() {
+    void authenticatesSessionUsingClientCredentials() {
         URI tokenUrl = URI.create("https://auth.example.test/services/oauth2/token");
 
         SalesforceOAuthProperties properties = new SalesforceOAuthProperties(tokenUrl,
@@ -73,11 +75,11 @@ class SalesforceOAuthClientTest {
                         }
                         """, MediaType.APPLICATION_JSON));
 
-        SalesforceAuthenticationResult result = client.authenticate();
-
-        assertThat(result.authenticated()).isTrue();
-        assertThat(result.tokenType()).isEqualTo("Bearer");
-        assertThat(result.issuedAt()).isEqualTo(Instant.ofEpochMilli(1_784_563_200_000L));
+        SalesforceSession session = client.authenticateSession();
+        assertThat(session.getAccessToken()).isEqualTo("synthetic-token");
+        assertThat(session.getInstanceUrl()).isEqualTo(URI.create("https://instance.example.test"));
+        assertThat(session.getTokenType()).isEqualTo("Bearer");
+        assertThat(session.getIssuedAt()).isEqualTo(Instant.ofEpochMilli(1_784_563_200_000L));
 
         server.verify();
     }
