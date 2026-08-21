@@ -11,5 +11,6 @@
     "java.format.settings.profile": "Northstar",
     "files.insertFinalNewline": true,
     "files.trimTrailingWhitespace": true,
-    "java.compile.nullAnalysis.mode": "automatic"
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.configuration.updateBuildConfiguration": "interactive"
 }
