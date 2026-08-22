@@ -106,14 +106,16 @@ organization.
 ### Build
 
 - Fetch the designated test Account through a dedicated Salesforce client.
-- Map the Salesforce JSON response into typed external DTOs.
+  **Complete at the stubbed HTTP boundary.**
+- Map the Salesforce JSON response into typed external DTOs. **Complete.**
 - Return or log a deliberately safe read-only result through the chosen trigger.
-- Define not-found, multiple-result, unauthorized, throttled, and malformed
-  response behavior.
+- Define not-found, multiple-result, unauthorized, throttled, malformed, and
+  unavailable response behavior. **Complete at the client boundary.**
 
 ### Test
 
 - Stub-server tests for request construction, mapping, and error cases.
+  **Complete for the Account client.**
 - One deliberate live happy-path smoke test.
 
 ### Exit criteria

@@ -126,6 +126,20 @@ Until explicitly brought into scope:
 - A tagged, opt-in Java smoke test has authenticated successfully against the
   Salesforce test organization. The default Maven verification excludes that
   live test and remains deterministic without Salesforce credentials.
+- `SalesforceSession` now carries the validated token and instance URL only
+  between trusted Salesforce client boundaries; the safe authentication result
+  remains free of credentials.
+- Account retrieval will use Salesforce's REST Query API with a required,
+  environment-backed API version and a typed query-result envelope. The query
+  will select only `Id`, `Name`, `Business_ID__c`, and `BillingCity`.
+- The dedicated Salesforce Account client now constructs an encoded SOQL query
+  against the authenticated instance URL, sends the bearer token, and maps a
+  single Account into a typed external response.
+- Focused stubbed-HTTP tests cover the Account happy path, invalid IDs, empty,
+  malformed, incomplete, zero-result, and multiple-result responses, HTTP
+  `401`, `429`, and `503` failures, and connection unavailability. HTTP failures
+  retain a typed status without exposing remote bodies, tokens, or instance
+  URLs; connection failures do not invent an HTTP status.
 - Spotless enforces the committed Eclipse formatter profile during Maven
   verification, and committed VS Code settings use the same profile on save.
 
@@ -167,9 +181,8 @@ The MVP is finished when:
 
 ## Next task
 
-Begin Milestone 2 by deciding how Salesforce REST API version and instance URL
-information will enter the Account client, then fetch one Account through a
-stubbed HTTP boundary.
+Continue Milestone 2 by orchestrating authentication and Account retrieval,
+then expose the safe result through the agreed synchronization trigger.
 
 ## Important decisions
 
