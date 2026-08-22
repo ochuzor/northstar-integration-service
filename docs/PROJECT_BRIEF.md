@@ -142,6 +142,9 @@ Until explicitly brought into scope:
   URLs; connection failures do not invent an HTTP status.
 - Spotless enforces the committed Eclipse formatter profile during Maven
   verification, and committed VS Code settings use the same profile on save.
+- Maven Surefire starts Mockito explicitly as a Java agent on Java 21, avoiding
+  deprecated dynamic self-attachment and keeping Mockito-based tests reliable
+  in restricted build environments.
 
 ## Current architecture
 
@@ -227,6 +230,9 @@ then expose the safe result through the agreed synchronization trigger.
 - Java formatting uses the repository's `Northstar` Eclipse profile in both
   Spotless and VS Code; `./mvnw spotless:check` verifies it and
   `./mvnw spotless:apply` fixes it.
+- Mockito instrumentation is supplied explicitly to the Maven test JVM through
+  the managed `mockito-core` artifact rather than dynamically attached at test
+  runtime.
 
 ### Pending
 
