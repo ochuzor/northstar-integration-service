@@ -243,6 +243,14 @@ mapping and validation policy from the safe Salesforce Account result.
 - Mockito instrumentation is supplied explicitly to the Maven test JVM through
   the managed `mockito-core` artifact rather than dynamically attached at test
   runtime.
+- The internal customer model will be Salesforce-independent. Its required
+  fields are source customer ID, business ID, and name; billing city is
+  optional. Mapping trims surrounding whitespace, converts a blank optional
+  billing city to `null`, and preserves business-ID and name casing.
+- Jakarta Bean Validation will validate the internal customer after mapping,
+  with invalid data translated into a dedicated safe
+  `CustomerValidationException`. The internal customer, Salesforce mapper,
+  future Kafka contract, and future persistence entity remain separate types.
 
 ### Pending
 

@@ -139,6 +139,12 @@ the designated Account through the real Java application flow.
 - Mapping versus validation responsibilities.
 - Field normalization and explicit missing-data policy.
 
+Agreed policy: the internal customer requires source customer ID, business ID,
+and name; billing city is optional. Mapping trims surrounding whitespace,
+converts blank billing city to `null`, and preserves casing. Jakarta Bean
+Validation runs after mapping and reports invalid customers through a dedicated
+safe exception.
+
 ### Build
 
 - Define the minimum internal customer model required by the mock ERP.
