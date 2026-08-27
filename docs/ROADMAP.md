@@ -109,6 +109,7 @@ organization.
   **Complete at the stubbed HTTP boundary.**
 - Map the Salesforce JSON response into typed external DTOs. **Complete.**
 - Return or log a deliberately safe read-only result through the chosen trigger.
+  **Complete through the HTTP controller.**
 - Define not-found, multiple-result, unauthorized, throttled, malformed, and
   unavailable response behavior. **Complete at the client boundary.**
 
@@ -116,6 +117,8 @@ organization.
 
 - Stub-server tests for request construction, mapping, and error cases.
   **Complete for the Account client.**
+- Focused application-service and MVC tests for orchestration, safe success
+  output, and sanitized HTTP error translation. **Complete.**
 - One deliberate live happy-path smoke test.
 
 ### Exit criteria

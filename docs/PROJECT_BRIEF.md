@@ -145,6 +145,12 @@ Until explicitly brought into scope:
 - Maven Surefire starts Mockito explicitly as a Java agent on Java 21, avoiding
   deprecated dynamic self-attachment and keeping Mockito-based tests reliable
   in restricted build environments.
+- An application service now orchestrates OAuth authentication and Account
+  retrieval while mapping the Salesforce DTO to the four-field safe result.
+- `POST /api/sync/account/{salesforceAccountId}` exposes that safe result. A
+  global HTTP exception boundary returns stable sanitized `400`, `404`, `502`,
+  and `503` error contracts without exposing upstream bodies, credentials, or
+  private instance details.
 
 ## Current architecture
 
@@ -184,8 +190,8 @@ The MVP is finished when:
 
 ## Next task
 
-Continue Milestone 2 by orchestrating authentication and Account retrieval,
-then expose the safe result through the agreed synchronization trigger.
+Finish Milestone 2 with one deliberate opt-in live smoke test that retrieves
+the designated Salesforce Account through the Java application flow.
 
 ## Important decisions
 
