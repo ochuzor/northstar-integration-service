@@ -151,6 +151,10 @@ Until explicitly brought into scope:
   global HTTP exception boundary returns stable sanitized `400`, `404`, `502`,
   and `503` error contracts without exposing upstream bodies, credentials, or
   private instance details.
+- A tagged, opt-in Account smoke test has successfully exercised the real Java
+  application flow from OAuth authentication through Salesforce Account
+  retrieval. The default Maven suite excludes this live test and remains
+  deterministic.
 
 ## Current architecture
 
@@ -190,8 +194,8 @@ The MVP is finished when:
 
 ## Next task
 
-Finish Milestone 2 with one deliberate opt-in live smoke test that retrieves
-the designated Salesforce Account through the Java application flow.
+Begin Milestone 3 by defining the minimum internal customer model and the
+mapping and validation policy from the safe Salesforce Account result.
 
 ## Important decisions
 

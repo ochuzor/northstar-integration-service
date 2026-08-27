@@ -120,11 +120,16 @@ organization.
 - Focused application-service and MVC tests for orchestration, safe success
   output, and sanitized HTTP error translation. **Complete.**
 - One deliberate live happy-path smoke test.
+  **Complete against the designated Salesforce test Account.**
 
 ### Exit criteria
 
 - The first vertical slice reliably authenticates, fetches, maps, and exposes
   the test Account without Kafka or PostgreSQL.
+
+**Status:** Complete. The deterministic suite verifies the HTTP, orchestration,
+and external-client boundaries, and the opt-in live smoke test has retrieved
+the designated Account through the real Java application flow.
 
 ## Milestone 3 — Transform and validate an internal customer
 
