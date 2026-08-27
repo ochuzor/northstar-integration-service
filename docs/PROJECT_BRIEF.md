@@ -155,6 +155,14 @@ Until explicitly brought into scope:
   application flow from OAuth authentication through Salesforce Account
   retrieval. The default Maven suite excludes this live test and remains
   deterministic.
+- A Salesforce-independent customer model now separates the internal business
+  representation from Salesforce DTOs. Mapping normalizes the accepted fields,
+  and Jakarta Bean Validation rejects missing required customer data through a
+  safe exception containing only invalid field names.
+- A customer-preparation application service composes Account retrieval,
+  mapping, and validation. The synchronization trigger now uses that service,
+  preserves the accepted safe success response, and returns a sanitized `422`
+  response when Salesforce data cannot produce a valid internal customer.
 
 ## Current architecture
 
@@ -194,8 +202,9 @@ The MVP is finished when:
 
 ## Next task
 
-Begin Milestone 3 by defining the minimum internal customer model and the
-mapping and validation policy from the safe Salesforce Account result.
+Begin Milestone 4 by designing the versioned Kafka event envelope, topic,
+message key, identity, correlation, and timestamp semantics before adding Kafka
+dependencies or infrastructure.
 
 ## Important decisions
 
@@ -251,6 +260,10 @@ mapping and validation policy from the safe Salesforce Account result.
   with invalid data translated into a dedicated safe
   `CustomerValidationException`. The internal customer, Salesforce mapper,
   future Kafka contract, and future persistence entity remain separate types.
+- A customer-preparation application service composes the tested Salesforce
+  Account retrieval, normalization mapper, and Jakarta validation boundary. It
+  returns a validated Salesforce-independent `Customer` or a safe validation
+  exception identifying only invalid field names.
 
 ### Pending
 

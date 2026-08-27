@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.northstar.integrationservice.domain.customer.CustomerValidationException;
 import com.northstar.integrationservice.salesforce.account.SalesforceAccountNotFoundException;
 import com.northstar.integrationservice.salesforce.account.SalesforceAccountRequestException;
 import com.northstar.integrationservice.salesforce.account.SalesforceAccountResponseException;
@@ -60,6 +61,12 @@ public class GlobalExceptionHandler {
             SalesforceAuthenticationUnavailableException.class})
     ResponseEntity<ApiError> handleSalesforceUnavailable() {
         return salesforceUnavailable();
+    }
+
+    @ExceptionHandler({CustomerValidationException.class})
+    ResponseEntity<ApiError> handleCustomerValidationException() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT).body(new ApiError(
+                "CUSTOMER_VALIDATION_FAILED", "Salesforce Account cannot be synchronized"));
     }
 
     private ResponseEntity<ApiError> salesforceUpstreamError() {

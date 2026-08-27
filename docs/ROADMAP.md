@@ -148,19 +148,29 @@ safe exception.
 ### Build
 
 - Define the minimum internal customer model required by the mock ERP.
-- Transform Salesforce Account data into that model.
+  **Complete.**
+- Transform Salesforce Account data into that model. **Complete.**
 - Validate required fields, including the planned missing `businessId` failure.
-- Produce an explicit success or validation-failure result.
+  **Complete at the application boundary.**
+- Produce an explicit success or validation-failure result. **Complete through
+  the synchronization HTTP boundary.**
 
 ### Test
 
-- Focused mapper boundary tests.
+- Focused mapper boundary tests. **Complete.**
 - Validation tests for complete, missing, malformed, and normalized fields.
+  **Complete for the agreed required and optional fields.**
 
 ### Exit criteria
 
 - Salesforce-specific DTOs do not leak into the internal event contract.
 - Invalid customers are rejected observably and are not silently discarded.
+
+**Status:** Complete. Salesforce Account data is mapped into a validated,
+Salesforce-independent customer through the application boundary. The trigger
+returns the accepted safe customer response on success and a sanitized `422`
+response for invalid customer data. Focused mapper, validator, orchestration,
+and MVC tests cover the behavior.
 
 ## Milestone 4 — Publish a versioned Kafka event
 
