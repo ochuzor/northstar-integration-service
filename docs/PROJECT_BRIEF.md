@@ -167,6 +167,10 @@ Until explicitly brought into scope:
   and customer payload are defined for Kafka. A deterministic factory uses an
   injected `Clock` and UUID generator for distinct event and correlation
   identities, and a Jackson 3 contract test verifies the complete JSON shape.
+- Spring Kafka is now available without requiring a broker during application
+  startup. Environment-backed bootstrap-server and validated customer-sync
+  topic configuration are defined, and explicit production beans supply the
+  UTC clock, random UUID generator, and event factory.
 
 ## Current architecture
 
@@ -206,9 +210,9 @@ The MVP is finished when:
 
 ## Next task
 
-Continue Milestone 4 by adding Spring Kafka, typed topic configuration, and the
-production event-factory dependencies before implementing the producer
-boundary.
+Continue Milestone 4 by implementing and testing the Kafka producer boundary,
+including the configured topic, `businessId` message key, broker
+acknowledgement, and sanitized publication failures.
 
 ## Important decisions
 

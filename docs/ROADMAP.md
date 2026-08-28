@@ -191,6 +191,8 @@ publication as `202 Accepted`, not completed ERP synchronization.
 ### Build
 
 - Add Kafka to local Docker infrastructure.
+- Add Spring Kafka, typed topic configuration, and deterministic production
+  event-factory wiring. **Complete without requiring a broker at startup.**
 - Define a small versioned customer-synchronization event envelope.
   **Complete.**
 - Publish valid transformed customers using a deliberate message key.
