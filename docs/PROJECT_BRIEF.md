@@ -44,9 +44,9 @@ must:
 8. record an observable succeeded or failed synchronization outcome;
 9. preserve failed messages through deliberate retry and dead-letter behavior.
 
-The exact trigger for a synchronization request is not yet decided. The first
-design task must choose a small explicit trigger rather than implying real-time
-Salesforce change capture that the project has not implemented.
+Synchronization is explicitly requested through
+`POST /api/sync/account/{salesforceAccountId}`. This does not imply real-time
+Salesforce change capture, which the project has not implemented.
 
 ## Current scope
 
@@ -163,6 +163,10 @@ Until explicitly brought into scope:
   mapping, and validation. The synchronization trigger now uses that service,
   preserves the accepted safe success response, and returns a sanitized `422`
   response when Salesforce data cannot produce a valid internal customer.
+- A versioned, Salesforce-independent `CUSTOMER_SYNC_REQUESTED` event contract
+  and customer payload are defined for Kafka. A deterministic factory uses an
+  injected `Clock` and UUID generator for distinct event and correlation
+  identities, and a Jackson 3 contract test verifies the complete JSON shape.
 
 ## Current architecture
 
@@ -202,9 +206,9 @@ The MVP is finished when:
 
 ## Next task
 
-Begin Milestone 4 by designing the versioned Kafka event envelope, topic,
-message key, identity, correlation, and timestamp semantics before adding Kafka
-dependencies or infrastructure.
+Continue Milestone 4 by adding Spring Kafka, typed topic configuration, and the
+production event-factory dependencies before implementing the producer
+boundary.
 
 ## Important decisions
 
@@ -264,10 +268,22 @@ dependencies or infrastructure.
   Account retrieval, normalization mapper, and Jakarta validation boundary. It
   returns a validated Salesforce-independent `Customer` or a safe validation
   exception identifying only invalid field names.
+- Customer synchronization events will use the configurable topic
+  `northstar.customer-sync.v1` by default. The versioned, self-describing event
+  envelope will include event and correlation UUIDs, an `Instant` timestamp,
+  event type, source system, version, and a customer payload separate from the
+  internal domain model.
+- Kafka messages will use `businessId` as their key so events for the same ERP
+  customer retain partition ordering. This ordering key is separate from the
+  event identity and the future consumer idempotency policy.
+- Event time and UUID generation will be controllable in tests. After Kafka is
+  connected, the HTTP trigger will return `202 Accepted` with safe event and
+  correlation identifiers only after the broker acknowledges publication; a
+  publication failure will produce a sanitized `503` response and will not
+  claim that ERP synchronization completed.
 
 ### Pending
 
-- Kafka topic and event-envelope contract.
 - Idempotency key and transaction boundary.
 - Retry ownership, retry limits, and dead-letter recovery workflow.
 - Audit model and success/failure semantics.

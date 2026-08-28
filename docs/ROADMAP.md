@@ -174,6 +174,14 @@ and MVC tests cover the behavior.
 
 ## Milestone 4 — Publish a versioned Kafka event
 
+Agreed contract: publish `CUSTOMER_SYNC_REQUESTED` version `1` events to the
+configurable `northstar.customer-sync.v1` topic using `businessId` as the Kafka
+message key. Each self-describing envelope carries distinct event and
+correlation UUIDs, an `Instant` timestamp, source `SALESFORCE`, and a customer
+payload separate from the internal domain model. Time and UUID generation must
+be controllable in tests. The HTTP trigger will report broker-acknowledged
+publication as `202 Accepted`, not completed ERP synchronization.
+
 ### Learn
 
 - Topics, partitions, keys, offsets, consumer groups, and delivery semantics.
@@ -184,12 +192,13 @@ and MVC tests cover the behavior.
 
 - Add Kafka to local Docker infrastructure.
 - Define a small versioned customer-synchronization event envelope.
+  **Complete.**
 - Publish valid transformed customers using a deliberate message key.
 - Define behavior when publication fails.
 
 ### Test
 
-- Serialization contract tests.
+- Serialization contract tests. **Complete with Jackson 3.**
 - Producer-focused tests.
 - A narrow Kafka integration test against disposable or local infrastructure.
 
