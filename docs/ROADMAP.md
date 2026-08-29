@@ -190,7 +190,8 @@ publication as `202 Accepted`, not completed ERP synchronization.
 
 ### Build
 
-- Add Kafka to local Docker infrastructure.
+- Add Kafka to local Docker infrastructure. **Complete with a single-node
+  KRaft broker in Docker Compose.**
 - Add Spring Kafka, typed topic configuration, and deterministic production
   event-factory wiring. **Complete without requiring a broker at startup.**
 - Define a small versioned customer-synchronization event envelope.
@@ -212,11 +213,16 @@ publication as `202 Accepted`, not completed ERP synchronization.
 - MVC tests for the acknowledged publication receipt and publication-failure
   response. **Complete.**
 - A narrow Kafka integration test against disposable or local infrastructure.
+  **Complete with an embedded KRaft broker.**
 
 ### Exit criteria
 
 - A valid Salesforce customer produces a documented event on Kafka.
 - Event version, identity, correlation, and timestamp semantics are explicit.
+
+**Status:** Complete. Local Kafka infrastructure is reproducible, and the
+automated integration test verifies acknowledged publication, the message key,
+and the deserialized event contract against a real embedded broker.
 
 ## Milestone 5 — Build the mock ERP consumer and persistence slice
 

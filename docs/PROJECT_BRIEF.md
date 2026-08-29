@@ -184,6 +184,10 @@ Until explicitly brought into scope:
   returns `202 Accepted` only after Kafka acknowledges publication. Its safe
   receipt contains the Salesforce Account ID, event ID, correlation ID, and an
   `ACCEPTED` status; publication failures return a sanitized `503` response.
+- A single-node Kafka broker is available through the repository's Docker
+  Compose configuration. An embedded-Kafka integration test proves that the
+  producer sends the expected `businessId` key and complete Jackson 3 event
+  contract to the configured customer-sync topic.
 
 ## Current architecture
 
@@ -223,9 +227,9 @@ The MVP is finished when:
 
 ## Next task
 
-Continue Milestone 4 by adding Kafka to reproducible local infrastructure and
-writing a narrow integration test that verifies a customer-sync event is
-actually published with the documented topic, key, and serialized contract.
+Begin Milestone 5 by scaffolding the separately runnable mock ERP Maven module
+and defining its consumer-owned customer-sync event input contract. Do not add
+PostgreSQL persistence or message-processing behavior in the same slice.
 
 ## Important decisions
 
