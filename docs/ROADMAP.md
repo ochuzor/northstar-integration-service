@@ -199,6 +199,8 @@ publication as `202 Accepted`, not completed ERP synchronization.
   **Complete at the mocked producer boundary.**
 - Define behavior when publication fails. **Complete at the producer boundary
   for rejection, timeout, immediate failure, and interruption.**
+- Orchestrate customer preparation, event creation, and acknowledged
+  publication. **Complete at the application-service boundary.**
 
 ### Test
 

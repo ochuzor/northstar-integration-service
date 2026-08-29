@@ -176,6 +176,10 @@ Until explicitly brought into scope:
   for broker acknowledgement. It returns safe publication identifiers on
   success and translates rejection, timeout, immediate send failure, or thread
   interruption into a sanitized exception while preserving interrupt status.
+- A customer-synchronization application service now orchestrates validated
+  customer preparation, versioned event creation, and acknowledged Kafka
+  publication. Preparation failures short-circuit the flow before an event is
+  created or a publication is attempted.
 
 ## Current architecture
 
@@ -215,9 +219,9 @@ The MVP is finished when:
 
 ## Next task
 
-Continue Milestone 4 by orchestrating customer preparation, event creation, and
-publication, then update the HTTP trigger to return a truthful `202 Accepted`
-receipt and a sanitized `503` publication-failure response.
+Continue Milestone 4 by updating the HTTP trigger to invoke the complete
+synchronization orchestration and return a truthful `202 Accepted` receipt or
+a sanitized `503` publication-failure response.
 
 ## Important decisions
 
