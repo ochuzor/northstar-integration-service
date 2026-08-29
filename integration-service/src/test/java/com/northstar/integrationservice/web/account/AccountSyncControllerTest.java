@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Set;
+import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,9 +18,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.northstar.integrationservice.application.customer.CustomerPreparationService;
-import com.northstar.integrationservice.domain.customer.Customer;
+import com.northstar.integrationservice.application.customer.CustomerSynchronizationService;
 import com.northstar.integrationservice.domain.customer.CustomerValidationException;
+import com.northstar.integrationservice.messaging.customer.CustomerSyncPublicationException;
+import com.northstar.integrationservice.messaging.customer.CustomerSyncPublicationResult;
 import com.northstar.integrationservice.salesforce.account.SalesforceAccountNotFoundException;
 import com.northstar.integrationservice.salesforce.account.SalesforceAccountRequestException;
 import com.northstar.integrationservice.salesforce.account.SalesforceAccountUnavailableException;
@@ -30,33 +32,34 @@ class AccountSyncControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private CustomerPreparationService customerPreparationService;
+    private CustomerSynchronizationService customerSynchronizationService;
 
     @Test
     void returnsSafeAccountForSyncRequest() throws Exception {
         String accountId = "001ABC123456789";
+        String eventId = "11111111-1111-1111-1111-111111111111";
+        String correlationId = "22222222-2222-2222-2222-222222222222";
 
-        when(customerPreparationService.prepareCustomer(accountId)).thenReturn(
-                new Customer(accountId, "NORTHSTAR-001", "Designated Test Account", "Helsinki"));
+        when(customerSynchronizationService.synchronizeAccount(accountId))
+                .thenReturn(new CustomerSyncPublicationResult(UUID.fromString(eventId),
+                        UUID.fromString(correlationId), accountId));
 
         mockMvc.perform(post("/api/sync/account/{salesforceAccountId}", accountId))
-                .andExpect(status().isOk())
+                .andExpect(status().isAccepted())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.salesforceAccountId").value(accountId))
-                .andExpect(jsonPath("$.name").value("Designated Test Account"))
-                .andExpect(jsonPath("$.businessId").value("NORTHSTAR-001"))
-                .andExpect(jsonPath("$.billingCity").value("Helsinki"))
-                .andExpect(jsonPath("$.accessToken").doesNotExist())
-                .andExpect(jsonPath("$.instanceUrl").doesNotExist())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+                .andExpect(jsonPath("$.eventId").value(eventId))
+                .andExpect(jsonPath("$.correlationId").value(correlationId))
+                .andExpect(jsonPath("$.status").value("ACCEPTED"));
 
-        verify(customerPreparationService).prepareCustomer(accountId);
+        verify(customerSynchronizationService).synchronizeAccount(accountId);
     }
 
     @Test
     void returnsBadRequestForInvalidAccountId() throws Exception {
         String accountId = "invalid-id";
 
-        when(customerPreparationService.prepareCustomer(accountId))
+        when(customerSynchronizationService.synchronizeAccount(accountId))
                 .thenThrow(new IllegalArgumentException("Internal validation detail"));
 
         mockMvc.perform(post("/api/sync/account/{salesforceAccountId}", accountId))
@@ -65,14 +68,14 @@ class AccountSyncControllerTest {
                 .andExpect(jsonPath("$.code").value("INVALID_ACCOUNT_ID"))
                 .andExpect(jsonPath("$.message").value("Invalid Salesforce Account ID"));
 
-        verify(customerPreparationService).prepareCustomer(accountId);
+        verify(customerSynchronizationService).synchronizeAccount(accountId);
     }
 
     @Test
     void returnsNotFoundWhenAccountDoesNotExist() throws Exception {
         String accountId = "001ABC123456789";
 
-        when(customerPreparationService.prepareCustomer(accountId))
+        when(customerSynchronizationService.synchronizeAccount(accountId))
                 .thenThrow(new SalesforceAccountNotFoundException(accountId));
 
         mockMvc.perform(post("/api/sync/account/{salesforceAccountId}", accountId))
@@ -81,14 +84,14 @@ class AccountSyncControllerTest {
                 .andExpect(jsonPath("$.code").value("ACCOUNT_NOT_FOUND"))
                 .andExpect(jsonPath("$.message").value("Salesforce Account was not found"));
 
-        verify(customerPreparationService).prepareCustomer(accountId);
+        verify(customerSynchronizationService).synchronizeAccount(accountId);
     }
 
     @Test
     void returnsBadGatewayWhenSalesforceRejectsRequest() throws Exception {
         String accountId = "001ABC123456789";
 
-        when(customerPreparationService.prepareCustomer(accountId))
+        when(customerSynchronizationService.synchronizeAccount(accountId))
                 .thenThrow(new SalesforceAccountRequestException(HttpStatus.UNAUTHORIZED));
 
         mockMvc.perform(post("/api/sync/account/{salesforceAccountId}", accountId))
@@ -97,14 +100,14 @@ class AccountSyncControllerTest {
                 .andExpect(jsonPath("$.code").value("SALESFORCE_UPSTREAM_ERROR"))
                 .andExpect(jsonPath("$.message").value("Salesforce returned an invalid response"));
 
-        verify(customerPreparationService).prepareCustomer(accountId);
+        verify(customerSynchronizationService).synchronizeAccount(accountId);
     }
 
     @Test
     void returnsServiceUnavailableWhenSalesforceThrottlesRequest() throws Exception {
         String accountId = "001ABC123456789";
 
-        when(customerPreparationService.prepareCustomer(accountId))
+        when(customerSynchronizationService.synchronizeAccount(accountId))
                 .thenThrow(new SalesforceAccountRequestException(HttpStatus.TOO_MANY_REQUESTS));
 
         mockMvc.perform(post("/api/sync/account/{salesforceAccountId}", accountId))
@@ -113,14 +116,14 @@ class AccountSyncControllerTest {
                 .andExpect(jsonPath("$.code").value("SALESFORCE_UNAVAILABLE"))
                 .andExpect(jsonPath("$.message").value("Salesforce is temporarily unavailable"));
 
-        verify(customerPreparationService).prepareCustomer(accountId);
+        verify(customerSynchronizationService).synchronizeAccount(accountId);
     }
 
     @Test
     void returnsServiceUnavailableWhenSalesforceIsUnavailable() throws Exception {
         String accountId = "001ABC123456789";
 
-        when(customerPreparationService.prepareCustomer(accountId))
+        when(customerSynchronizationService.synchronizeAccount(accountId))
                 .thenThrow(new SalesforceAccountUnavailableException());
 
         mockMvc.perform(post("/api/sync/account/{salesforceAccountId}", accountId))
@@ -129,14 +132,14 @@ class AccountSyncControllerTest {
                 .andExpect(jsonPath("$.code").value("SALESFORCE_UNAVAILABLE"))
                 .andExpect(jsonPath("$.message").value("Salesforce is temporarily unavailable"));
 
-        verify(customerPreparationService).prepareCustomer(accountId);
+        verify(customerSynchronizationService).synchronizeAccount(accountId);
     }
 
     @Test
     void returnsUnprocessableEntityForInvalidCustomer() throws Exception {
         String accountId = "001ABC123456789";
 
-        when(customerPreparationService.prepareCustomer(accountId))
+        when(customerSynchronizationService.synchronizeAccount(accountId))
                 .thenThrow(new CustomerValidationException(Set.of("businessId")));
 
         mockMvc.perform(post("/api/sync/account/{salesforceAccountId}", accountId))
@@ -145,6 +148,23 @@ class AccountSyncControllerTest {
                 .andExpect(jsonPath("$.code").value("CUSTOMER_VALIDATION_FAILED")).andExpect(
                         jsonPath("$.message").value("Salesforce Account cannot be synchronized"));
 
-        verify(customerPreparationService).prepareCustomer(accountId);
+        verify(customerSynchronizationService).synchronizeAccount(accountId);
+    }
+
+    @Test
+    void returnsServiceUnavailableWhenEventPublicationFails() throws Exception {
+        String accountId = "001ABC123456789";
+
+        when(customerSynchronizationService.synchronizeAccount(accountId))
+                .thenThrow(new CustomerSyncPublicationException());
+
+        mockMvc.perform(post("/api/sync/account/{salesforceAccountId}", accountId))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.code").value("SYNC_PUBLICATION_UNAVAILABLE"))
+                .andExpect(jsonPath("$.message")
+                        .value("Customer synchronization is temporarily unavailable"));
+
+        verify(customerSynchronizationService).synchronizeAccount(accountId);
     }
 }

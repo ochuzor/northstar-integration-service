@@ -180,6 +180,10 @@ Until explicitly brought into scope:
   customer preparation, versioned event creation, and acknowledged Kafka
   publication. Preparation failures short-circuit the flow before an event is
   created or a publication is attempted.
+- The HTTP synchronization trigger now invokes the complete orchestration and
+  returns `202 Accepted` only after Kafka acknowledges publication. Its safe
+  receipt contains the Salesforce Account ID, event ID, correlation ID, and an
+  `ACCEPTED` status; publication failures return a sanitized `503` response.
 
 ## Current architecture
 
@@ -219,9 +223,9 @@ The MVP is finished when:
 
 ## Next task
 
-Continue Milestone 4 by updating the HTTP trigger to invoke the complete
-synchronization orchestration and return a truthful `202 Accepted` receipt or
-a sanitized `503` publication-failure response.
+Continue Milestone 4 by adding Kafka to reproducible local infrastructure and
+writing a narrow integration test that verifies a customer-sync event is
+actually published with the documented topic, key, and serialized contract.
 
 ## Important decisions
 

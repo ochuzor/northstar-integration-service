@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.northstar.integrationservice.domain.customer.CustomerValidationException;
+import com.northstar.integrationservice.messaging.customer.CustomerSyncPublicationException;
 import com.northstar.integrationservice.salesforce.account.SalesforceAccountNotFoundException;
 import com.northstar.integrationservice.salesforce.account.SalesforceAccountRequestException;
 import com.northstar.integrationservice.salesforce.account.SalesforceAccountResponseException;
@@ -67,6 +68,13 @@ public class GlobalExceptionHandler {
     ResponseEntity<ApiError> handleCustomerValidationException() {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT).body(new ApiError(
                 "CUSTOMER_VALIDATION_FAILED", "Salesforce Account cannot be synchronized"));
+    }
+
+    @ExceptionHandler({CustomerSyncPublicationException.class})
+    ResponseEntity<ApiError> handleCustomerSyncPublicationException() {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(new ApiError("SYNC_PUBLICATION_UNAVAILABLE",
+                        "Customer synchronization is temporarily unavailable"));
     }
 
     private ResponseEntity<ApiError> salesforceUpstreamError() {

@@ -201,11 +201,16 @@ publication as `202 Accepted`, not completed ERP synchronization.
   for rejection, timeout, immediate failure, and interruption.**
 - Orchestrate customer preparation, event creation, and acknowledged
   publication. **Complete at the application-service boundary.**
+- Connect the HTTP trigger to the complete synchronization flow and return a
+  truthful `202 Accepted` publication receipt or sanitized `503` publication
+  failure. **Complete at the MVC boundary.**
 
 ### Test
 
 - Serialization contract tests. **Complete with Jackson 3.**
 - Producer-focused tests. **Complete.**
+- MVC tests for the acknowledged publication receipt and publication-failure
+  response. **Complete.**
 - A narrow Kafka integration test against disposable or local infrastructure.
 
 ### Exit criteria
