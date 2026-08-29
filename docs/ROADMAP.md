@@ -196,12 +196,14 @@ publication as `202 Accepted`, not completed ERP synchronization.
 - Define a small versioned customer-synchronization event envelope.
   **Complete.**
 - Publish valid transformed customers using a deliberate message key.
-- Define behavior when publication fails.
+  **Complete at the mocked producer boundary.**
+- Define behavior when publication fails. **Complete at the producer boundary
+  for rejection, timeout, immediate failure, and interruption.**
 
 ### Test
 
 - Serialization contract tests. **Complete with Jackson 3.**
-- Producer-focused tests.
+- Producer-focused tests. **Complete.**
 - A narrow Kafka integration test against disposable or local infrastructure.
 
 ### Exit criteria

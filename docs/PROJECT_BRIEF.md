@@ -171,6 +171,11 @@ Until explicitly brought into scope:
   startup. Environment-backed bootstrap-server and validated customer-sync
   topic configuration are defined, and explicit production beans supply the
   UTC clock, random UUID generator, and event factory.
+- The Kafka producer boundary publishes customer-sync events to the configured
+  topic with `businessId` as the message key and waits a bounded five seconds
+  for broker acknowledgement. It returns safe publication identifiers on
+  success and translates rejection, timeout, immediate send failure, or thread
+  interruption into a sanitized exception while preserving interrupt status.
 
 ## Current architecture
 
@@ -210,9 +215,9 @@ The MVP is finished when:
 
 ## Next task
 
-Continue Milestone 4 by implementing and testing the Kafka producer boundary,
-including the configured topic, `businessId` message key, broker
-acknowledgement, and sanitized publication failures.
+Continue Milestone 4 by orchestrating customer preparation, event creation, and
+publication, then update the HTTP trigger to return a truthful `202 Accepted`
+receipt and a sanitized `503` publication-failure response.
 
 ## Important decisions
 
