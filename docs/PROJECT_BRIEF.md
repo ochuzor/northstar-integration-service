@@ -192,6 +192,11 @@ Until explicitly brought into scope:
   the root Maven build. It owns a matching customer-sync input contract, and a
   Jackson 3 test proves that version-one producer JSON can be deserialized
   without sharing Java DTO classes between services.
+- The mock ERP now has validated typed topic, group, and listener-enabled
+  configuration plus a Kafka listener boundary that delegates the message key
+  and deserialized event to an application handler. The listener is disabled by
+  default so this pre-persistence slice cannot acknowledge and discard real
+  synchronization work; focused tests verify configuration and delegation.
 
 ## Current architecture
 
@@ -231,10 +236,10 @@ The MVP is finished when:
 
 ## Next task
 
-Continue Milestone 5 by adding the mock ERP Kafka consumer boundary. Configure
-its topic and consumer group explicitly, deserialize the version-one event,
-and delegate accepted messages to a small application handler without adding
-PostgreSQL persistence yet.
+Continue Milestone 5 by mapping the consumer-owned event payload into a
+Salesforce-independent mock ERP customer model and validating its required
+fields in the application handler. Keep the Kafka listener disabled by default
+and do not add PostgreSQL persistence in the same slice.
 
 ## Important decisions
 
