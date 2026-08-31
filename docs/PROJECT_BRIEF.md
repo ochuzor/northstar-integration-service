@@ -188,6 +188,10 @@ Until explicitly brought into scope:
   Compose configuration. An embedded-Kafka integration test proves that the
   producer sends the expected `businessId` key and complete Jackson 3 event
   contract to the configured customer-sync topic.
+- A separately runnable Java 21 mock ERP Spring Boot module now participates in
+  the root Maven build. It owns a matching customer-sync input contract, and a
+  Jackson 3 test proves that version-one producer JSON can be deserialized
+  without sharing Java DTO classes between services.
 
 ## Current architecture
 
@@ -227,9 +231,10 @@ The MVP is finished when:
 
 ## Next task
 
-Begin Milestone 5 by scaffolding the separately runnable mock ERP Maven module
-and defining its consumer-owned customer-sync event input contract. Do not add
-PostgreSQL persistence or message-processing behavior in the same slice.
+Continue Milestone 5 by adding the mock ERP Kafka consumer boundary. Configure
+its topic and consumer group explicitly, deserialize the version-one event,
+and delegate accepted messages to a small application handler without adding
+PostgreSQL persistence yet.
 
 ## Important decisions
 

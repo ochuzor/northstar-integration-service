@@ -234,13 +234,16 @@ and the deserialized event contract against a real embedded broker.
 
 ### Build
 
-- Scaffold the mock ERP service at the agreed boundary.
+- Scaffold the mock ERP service at the agreed boundary. **Complete as a
+  separately runnable Java 21 Spring Boot Maven module.**
 - Consume and validate the customer event.
 - Store the ERP customer in PostgreSQL through a Flyway-managed schema.
 - Keep event DTOs separate from persistence entities.
 
 ### Test
 
+- Consumer-owned event contract deserialization test. **Complete with Jackson
+  3 and the version-one producer JSON shape.**
 - Consumer mapping tests.
 - PostgreSQL repository tests.
 - Kafka-to-database integration test for the happy path.

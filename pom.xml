@@ -13,6 +13,7 @@
 
     <modules>
         <module>integration-service</module>
+        <module>mock-erp-service</module>
     </modules>
 
     <build>
