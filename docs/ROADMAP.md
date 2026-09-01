@@ -239,7 +239,8 @@ and the deserialized event contract against a real embedded broker.
 - Add a configurable Kafka listener that deserializes and delegates the
   customer event. **Complete at the listener unit boundary and disabled by
   default until durable handling exists.**
-- Validate and handle the consumed customer event.
+- Validate and handle the consumed customer event. **Complete through a
+  normalized ERP domain model and application-handler boundary.**
 - Store the ERP customer in PostgreSQL through a Flyway-managed schema.
 - Keep event DTOs separate from persistence entities.
 
@@ -248,7 +249,8 @@ and the deserialized event contract against a real embedded broker.
 - Consumer-owned event contract deserialization test. **Complete with Jackson
   3 and the version-one producer JSON shape.**
 - Typed consumer-configuration and listener-delegation tests. **Complete.**
-- Consumer mapping tests.
+- Consumer mapping tests. **Complete for mapping, normalization, validation,
+  handler ordering, and validation-failure propagation.**
 - PostgreSQL repository tests.
 - Kafka-to-database integration test for the happy path.
 

@@ -197,6 +197,11 @@ Until explicitly brought into scope:
   and deserialized event to an application handler. The listener is disabled by
   default so this pre-persistence slice cannot acknowledge and discard real
   synchronization work; focused tests verify configuration and delegation.
+- The mock ERP application handler now maps the messaging payload into a
+  separate normalized `ErpCustomer` domain model and validates its required
+  source ID, business ID, and name. Validation failures retain only safe invalid
+  field names and propagate out of the handler so Kafka cannot interpret them
+  as successful processing.
 
 ## Current architecture
 
@@ -236,10 +241,10 @@ The MVP is finished when:
 
 ## Next task
 
-Continue Milestone 5 by mapping the consumer-owned event payload into a
-Salesforce-independent mock ERP customer model and validating its required
-fields in the application handler. Keep the Kafka listener disabled by default
-and do not add PostgreSQL persistence in the same slice.
+Continue Milestone 5 by adding PostgreSQL to local infrastructure and
+establishing the mock ERP persistence boundary with JPA, a versioned Flyway
+migration, and focused repository tests. Keep the Kafka listener disabled until
+the handler can persist successfully within a deliberate transaction boundary.
 
 ## Important decisions
 
