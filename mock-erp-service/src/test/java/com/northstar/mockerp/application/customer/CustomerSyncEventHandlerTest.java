@@ -1,12 +1,16 @@
 package com.northstar.mockerp.application.customer;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -24,7 +28,7 @@ import com.northstar.mockerp.persistence.customer.ErpCustomerRepository;
 class CustomerSyncEventHandlerTest {
 
     @Test
-    void mapsValidatesAndPersistsCustomer() {
+    void createsCustomerWhenSourceCustomerIdDoesNotExist() {
         CustomerSyncPayloadToErpCustomerMapper payloadMapper = mock(
                 CustomerSyncPayloadToErpCustomerMapper.class);
         ErpCustomerValidator validator = mock(ErpCustomerValidator.class);
@@ -46,6 +50,7 @@ class CustomerSyncEventHandlerTest {
                 "Customer Name", "Helsinki");
         when(payloadMapper.map(payload)).thenReturn(customer);
         when(validator.validate(customer)).thenReturn(customer);
+        when(repository.findBySourceCustomerId("customer-id")).thenReturn(Optional.empty());
         when(entityMapper.map(customer)).thenReturn(entity);
 
         handler.handle("business-id", event);
@@ -53,6 +58,7 @@ class CustomerSyncEventHandlerTest {
         InOrder processingOrder = inOrder(payloadMapper, validator, entityMapper, repository);
         processingOrder.verify(payloadMapper).map(payload);
         processingOrder.verify(validator).validate(customer);
+        processingOrder.verify(repository).findBySourceCustomerId("customer-id");
         processingOrder.verify(entityMapper).map(customer);
         processingOrder.verify(repository).save(entity);
     }
@@ -109,9 +115,45 @@ class CustomerSyncEventHandlerTest {
                 "database unavailable");
         when(payloadMapper.map(payload)).thenReturn(customer);
         when(validator.validate(customer)).thenReturn(customer);
+        when(repository.findBySourceCustomerId("customer-id")).thenReturn(Optional.empty());
         when(entityMapper.map(customer)).thenReturn(entity);
         when(repository.save(entity)).thenThrow(persistenceFailure);
 
         assertThatThrownBy(() -> handler.handle("business-id", event)).isSameAs(persistenceFailure);
+    }
+
+    @Test
+    void updatesExistingCustomerWhenSourceCustomerIdAlreadyExists() {
+        CustomerSyncPayloadToErpCustomerMapper payloadMapper = mock(
+                CustomerSyncPayloadToErpCustomerMapper.class);
+        ErpCustomerValidator validator = mock(ErpCustomerValidator.class);
+        ErpCustomerToEntityMapper entityMapper = mock(ErpCustomerToEntityMapper.class);
+        ErpCustomerRepository repository = mock(ErpCustomerRepository.class);
+        CustomerSyncEventHandler handler = new CustomerSyncEventHandler(payloadMapper, validator,
+                entityMapper, repository);
+        CustomerSyncPayload payload = new CustomerSyncPayload("customer-id", "new-business-id",
+                "New Customer Name", "Espoo");
+        CustomerSyncRequestedEvent event = new CustomerSyncRequestedEvent(
+                UUID.fromString("11111111-1111-1111-1111-111111111111"),
+                UUID.fromString("22222222-2222-2222-2222-222222222222"),
+                Instant.parse("2026-08-28T10:15:30Z"), 1, "CUSTOMER_SYNC_REQUESTED", "SALESFORCE",
+                payload);
+        ErpCustomer customer = new ErpCustomer("customer-id", "new-business-id",
+                "New Customer Name", "Espoo");
+        ErpCustomerEntity existingEntity = new ErpCustomerEntity("customer-id", "old-business-id",
+                "Old Customer Name", "Helsinki");
+        when(payloadMapper.map(payload)).thenReturn(customer);
+        when(validator.validate(customer)).thenReturn(customer);
+        when(repository.findBySourceCustomerId("customer-id"))
+                .thenReturn(Optional.of(existingEntity));
+
+        handler.handle("new-business-id", event);
+
+        assertThat(existingEntity.getSourceCustomerId()).isEqualTo("customer-id");
+        assertThat(existingEntity.getBusinessId()).isEqualTo("new-business-id");
+        assertThat(existingEntity.getName()).isEqualTo("New Customer Name");
+        assertThat(existingEntity.getBillingCity()).isEqualTo("Espoo");
+        verify(entityMapper, never()).map(customer);
+        verify(repository).save(existingEntity);
     }
 }

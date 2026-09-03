@@ -279,8 +279,12 @@ created duplicate rows as expected before Milestone 6.
 
 ### Build
 
-- Choose and document the idempotency key.
-- Make duplicate delivery safe under the chosen update semantics.
+- Choose and document the idempotency key. **Complete for the single-source MVP:
+  use Salesforce `sourceCustomerId` with update semantics and database
+  uniqueness.**
+- Make duplicate delivery safe under the chosen update semantics. **Complete at
+  the transactional handler and database-constraint boundaries; repeated Kafka
+  delivery remains to be proven by integration test.**
 - Record enough processing state to distinguish duplicate, succeeded, and
   failed attempts.
 
@@ -289,6 +293,8 @@ created duplicate rows as expected before Milestone 6.
 - Deliver the same event repeatedly.
 - Verify no duplicate ERP customer and no incorrect repeated side effect.
 - Exercise a concurrency-relevant duplicate scenario where practical.
+  **Complete at the database boundary: the unique constraint rejects a second
+  row with the same source customer ID.**
 
 ### Exit criteria
 

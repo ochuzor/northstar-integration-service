@@ -38,6 +38,12 @@ public class ErpCustomerEntity {
         this.billingCity = billingCity;
     }
 
+    public void updateDetails(String businessId, String name, String billingCity) {
+        this.businessId = businessId;
+        this.name = name;
+        this.billingCity = billingCity;
+    }
+
     public Long getId() {
         return id;
     }

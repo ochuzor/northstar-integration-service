@@ -223,6 +223,10 @@ Until explicitly brought into scope:
   configured event type, preserving the service contract boundary. Repeating
   the trigger produced duplicate rows, confirming the idempotency behavior
   intentionally deferred to Milestone 6.
+- Mock ERP persistence now enforces one row per Salesforce `sourceCustomerId`.
+  Transactional event handling creates a missing customer or updates the
+  existing row's mutable details, with focused handler and PostgreSQL constraint
+  tests covering both paths.
 
 ## Current architecture
 
@@ -262,9 +266,9 @@ The MVP is finished when:
 
 ## Next task
 
-Begin Milestone 6 by choosing and documenting the customer-sync idempotency key
-and update semantics before changing the schema or handler. Use the observed
-duplicate rows from repeated delivery to drive the design.
+Continue Milestone 6 by extending the Kafka-to-PostgreSQL integration test to
+deliver the same customer more than once with changed mutable values. Verify
+that one database row remains and contains the latest values.
 
 ## Important decisions
 
@@ -332,6 +336,17 @@ duplicate rows from repeated delivery to drive the design.
 - Kafka messages will use `businessId` as their key so events for the same ERP
   customer retain partition ordering. This ordering key is separate from the
   event identity and the future consumer idempotency policy.
+- The mock ERP idempotency key for the single-source MVP is Salesforce
+  `sourceCustomerId`, enforced by a unique database constraint. `eventId` is not
+  the customer idempotency key because repeated HTTP triggers create distinct
+  events for the same source customer.
+- Repeated customer synchronization uses update semantics: the existing ERP
+  row keeps its database identity while business ID, name, and billing city are
+  replaced by the latest valid event values.
+- Existing duplicate rows are disposable development data and will be removed
+  by explicitly resetting the local PostgreSQL volume before the unique
+  constraint migration is applied; the migration itself will not silently
+  delete duplicates.
 - Event time and UUID generation will be controllable in tests. After Kafka is
   connected, the HTTP trigger will return `202 Accepted` with safe event and
   correlation identifiers only after the broker acknowledges publication; a
@@ -340,7 +355,6 @@ duplicate rows from repeated delivery to drive the design.
 
 ### Pending
 
-- Idempotency key and transaction boundary.
 - Retry ownership, retry limits, and dead-letter recovery workflow.
 - Audit model and success/failure semantics.
 

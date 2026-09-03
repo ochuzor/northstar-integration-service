@@ -32,11 +32,23 @@ public class CustomerSyncEventHandler {
     public void handle(String messageKey, CustomerSyncRequestedEvent event) {
         ErpCustomer customer = customerMapper.map(event.customer());
         ErpCustomer validatedCustomer = validator.validate(customer);
-        ErpCustomerEntity customerEntity = entityMapper.map(validatedCustomer);
+
+        ErpCustomerEntity customerEntity = repository
+                .findBySourceCustomerId(validatedCustomer.sourceCustomerId())
+                .map(existingCustomer -> updateExistingCustomer(existingCustomer,
+                        validatedCustomer))
+                .orElseGet(() -> entityMapper.map(validatedCustomer));
         repository.save(customerEntity);
 
         LOGGER.info(
                 "Received customer sync event: eventId={}, correlationId={}, businessId={}, messageKey={}",
-                event.eventId(), event.correlationId(), customer.businessId(), messageKey);
+                event.eventId(), event.correlationId(), validatedCustomer.businessId(), messageKey);
+    }
+
+    private ErpCustomerEntity updateExistingCustomer(ErpCustomerEntity existingCustomer,
+            ErpCustomer customer) {
+        existingCustomer.updateDetails(customer.businessId(), customer.name(),
+                customer.billingCity());
+        return existingCustomer;
     }
 }

@@ -1,6 +1,7 @@
 package com.northstar.mockerp.persistence.customer;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,7 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.context.annotation.Import;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import com.northstar.mockerp.PostgreSqlTestConfiguration;
 
@@ -56,5 +58,17 @@ class ErpCustomerRepositoryTest {
 
         assertThat(repository.findBySourceCustomerId("001ABC123456789013")).hasValueSatisfying(
                 savedCustomer -> assertThat(savedCustomer.getBillingCity()).isNull());
+    }
+
+    @Test
+    void rejectsDuplicateSourceCustomerId() {
+        repository.saveAndFlush(new ErpCustomerEntity("001ABC123456789014", "NORTHSTAR-003",
+                "Original Customer", "Helsinki"));
+
+        ErpCustomerEntity duplicate = new ErpCustomerEntity("001ABC123456789014", "NORTHSTAR-004",
+                "Duplicate Customer", "Espoo");
+
+        assertThatThrownBy(() -> repository.saveAndFlush(duplicate))
+                .isInstanceOf(DataIntegrityViolationException.class);
     }
 }
