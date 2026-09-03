@@ -242,7 +242,7 @@ and the deserialized event contract against a real embedded broker.
 - Validate and handle the consumed customer event. **Complete through a
   normalized ERP domain model and application-handler boundary.**
 - Store the ERP customer in PostgreSQL through a Flyway-managed schema.
-  **Complete at the repository boundary.**
+  **Complete through the transactional application-handler boundary.**
 - Keep event DTOs separate from persistence entities. **Complete across the
   messaging, domain, and JPA boundaries.**
 
@@ -252,7 +252,8 @@ and the deserialized event contract against a real embedded broker.
   3 and the version-one producer JSON shape.**
 - Typed consumer-configuration and listener-delegation tests. **Complete.**
 - Consumer mapping tests. **Complete for mapping, normalization, validation,
-  handler ordering, and validation-failure propagation.**
+  handler ordering, persistence, validation short-circuiting, and database
+  failure propagation.**
 - PostgreSQL repository tests. **Complete with Flyway and Testcontainers.**
 - Kafka-to-database integration test for the happy path.
 

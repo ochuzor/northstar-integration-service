@@ -3,6 +3,7 @@ package com.northstar.mockerp.application.customer;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
@@ -11,19 +12,27 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
+import org.springframework.dao.DataAccessResourceFailureException;
 
 import com.northstar.mockerp.domain.customer.ErpCustomer;
 import com.northstar.mockerp.domain.customer.ErpCustomerValidationException;
 import com.northstar.mockerp.messaging.customer.CustomerSyncPayload;
 import com.northstar.mockerp.messaging.customer.CustomerSyncRequestedEvent;
+import com.northstar.mockerp.persistence.customer.ErpCustomerEntity;
+import com.northstar.mockerp.persistence.customer.ErpCustomerRepository;
 
 class CustomerSyncEventHandlerTest {
+
     @Test
-    void mapsAndValidatesCustomerBeforeAcceptingEvent() {
-        CustomerSyncPayloadToErpCustomerMapper mapper = mock(
+    void mapsValidatesAndPersistsCustomer() {
+        CustomerSyncPayloadToErpCustomerMapper payloadMapper = mock(
                 CustomerSyncPayloadToErpCustomerMapper.class);
         ErpCustomerValidator validator = mock(ErpCustomerValidator.class);
-        CustomerSyncEventHandler handler = new CustomerSyncEventHandler(mapper, validator);
+        ErpCustomerToEntityMapper entityMapper = mock(ErpCustomerToEntityMapper.class);
+        ErpCustomerRepository repository = mock(ErpCustomerRepository.class);
+
+        CustomerSyncEventHandler handler = new CustomerSyncEventHandler(payloadMapper, validator,
+                entityMapper, repository);
         CustomerSyncPayload payload = new CustomerSyncPayload("customer-id", "business-id",
                 "Customer Name", "Helsinki");
         CustomerSyncRequestedEvent event = new CustomerSyncRequestedEvent(
@@ -33,22 +42,31 @@ class CustomerSyncEventHandlerTest {
                 payload);
         ErpCustomer customer = new ErpCustomer("customer-id", "business-id", "Customer Name",
                 "Helsinki");
-        when(mapper.map(payload)).thenReturn(customer);
+        ErpCustomerEntity entity = new ErpCustomerEntity("customer-id", "business-id",
+                "Customer Name", "Helsinki");
+        when(payloadMapper.map(payload)).thenReturn(customer);
         when(validator.validate(customer)).thenReturn(customer);
+        when(entityMapper.map(customer)).thenReturn(entity);
 
         handler.handle("business-id", event);
 
-        InOrder processingOrder = inOrder(mapper, validator);
-        processingOrder.verify(mapper).map(payload);
+        InOrder processingOrder = inOrder(payloadMapper, validator, entityMapper, repository);
+        processingOrder.verify(payloadMapper).map(payload);
         processingOrder.verify(validator).validate(customer);
+        processingOrder.verify(entityMapper).map(customer);
+        processingOrder.verify(repository).save(entity);
     }
 
     @Test
-    void propagatesErpCustomerValidationFailure() {
-        CustomerSyncPayloadToErpCustomerMapper mapper = mock(
+    void doesNotPersistInvalidCustomer() {
+        CustomerSyncPayloadToErpCustomerMapper payloadMapper = mock(
                 CustomerSyncPayloadToErpCustomerMapper.class);
         ErpCustomerValidator validator = mock(ErpCustomerValidator.class);
-        CustomerSyncEventHandler handler = new CustomerSyncEventHandler(mapper, validator);
+        ErpCustomerToEntityMapper entityMapper = mock(ErpCustomerToEntityMapper.class);
+        ErpCustomerRepository repository = mock(ErpCustomerRepository.class);
+
+        CustomerSyncEventHandler handler = new CustomerSyncEventHandler(payloadMapper, validator,
+                entityMapper, repository);
         CustomerSyncPayload payload = new CustomerSyncPayload("customer-id", null, "Customer Name",
                 null);
         CustomerSyncRequestedEvent event = new CustomerSyncRequestedEvent(
@@ -59,9 +77,41 @@ class CustomerSyncEventHandlerTest {
         ErpCustomer customer = new ErpCustomer("customer-id", null, "Customer Name", null);
         ErpCustomerValidationException validationFailure = new ErpCustomerValidationException(
                 Set.of("businessId"));
-        when(mapper.map(payload)).thenReturn(customer);
+        when(payloadMapper.map(payload)).thenReturn(customer);
         when(validator.validate(customer)).thenThrow(validationFailure);
 
         assertThatThrownBy(() -> handler.handle(null, event)).isSameAs(validationFailure);
+
+        verifyNoInteractions(entityMapper, repository);
+    }
+
+    @Test
+    void propagatesPersistenceFailure() {
+        CustomerSyncPayloadToErpCustomerMapper payloadMapper = mock(
+                CustomerSyncPayloadToErpCustomerMapper.class);
+        ErpCustomerValidator validator = mock(ErpCustomerValidator.class);
+        ErpCustomerToEntityMapper entityMapper = mock(ErpCustomerToEntityMapper.class);
+        ErpCustomerRepository repository = mock(ErpCustomerRepository.class);
+        CustomerSyncEventHandler handler = new CustomerSyncEventHandler(payloadMapper, validator,
+                entityMapper, repository);
+        CustomerSyncPayload payload = new CustomerSyncPayload("customer-id", "business-id",
+                "Customer Name", "Helsinki");
+        CustomerSyncRequestedEvent event = new CustomerSyncRequestedEvent(
+                UUID.fromString("11111111-1111-1111-1111-111111111111"),
+                UUID.fromString("22222222-2222-2222-2222-222222222222"),
+                Instant.parse("2026-08-28T10:15:30Z"), 1, "CUSTOMER_SYNC_REQUESTED", "SALESFORCE",
+                payload);
+        ErpCustomer customer = new ErpCustomer("customer-id", "business-id", "Customer Name",
+                "Helsinki");
+        ErpCustomerEntity entity = new ErpCustomerEntity("customer-id", "business-id",
+                "Customer Name", "Helsinki");
+        DataAccessResourceFailureException persistenceFailure = new DataAccessResourceFailureException(
+                "database unavailable");
+        when(payloadMapper.map(payload)).thenReturn(customer);
+        when(validator.validate(customer)).thenReturn(customer);
+        when(entityMapper.map(customer)).thenReturn(entity);
+        when(repository.save(entity)).thenThrow(persistenceFailure);
+
+        assertThatThrownBy(() -> handler.handle("business-id", event)).isSameAs(persistenceFailure);
     }
 }

@@ -208,6 +208,11 @@ Until explicitly brought into scope:
   repository tests prove required-field persistence, generated identity,
   lookup by Salesforce source customer ID, and nullable billing city behavior
   against PostgreSQL.
+- The mock ERP application handler now maps validated domain customers into
+  persistence entities and saves them within a Spring-managed transaction.
+  Validation failures stop before persistence, and database failures propagate
+  back through the listener boundary instead of being treated as successful
+  message handling.
 
 ## Current architecture
 
@@ -247,11 +252,11 @@ The MVP is finished when:
 
 ## Next task
 
-Continue Milestone 5 by mapping validated ERP customers into persistence
-entities and saving them from the application handler within a deliberate
-transaction boundary. Keep the Kafka listener disabled until focused handler
-tests prove that validation occurs before persistence and persistence failures
-propagate rather than being acknowledged.
+Complete Milestone 5 with a Kafka-to-PostgreSQL integration test that enables
+the listener only for the test, publishes a version-one customer-sync event,
+and verifies the resulting ERP customer row. Then deliberately enable the
+listener for the local end-to-end flow and verify one triggered Salesforce
+Account reaches PostgreSQL.
 
 ## Important decisions
 
