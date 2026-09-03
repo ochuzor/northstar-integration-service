@@ -217,6 +217,12 @@ Until explicitly brought into scope:
   its test context, publishes the version-one contract as JSON to an embedded
   Kafka broker, and verifies the resulting customer row in a Testcontainers
   PostgreSQL database without mocking the consumer, handler, or repository.
+- The live local flow has now been verified from the HTTP trigger and real
+  Salesforce test Account through Docker Compose Kafka into PostgreSQL. The
+  producer omits Java type headers and the consumer deliberately uses its own
+  configured event type, preserving the service contract boundary. Repeating
+  the trigger produced duplicate rows, confirming the idempotency behavior
+  intentionally deferred to Milestone 6.
 
 ## Current architecture
 
@@ -256,10 +262,9 @@ The MVP is finished when:
 
 ## Next task
 
-Complete Milestone 5 by deliberately enabling the listener for the local
-end-to-end flow and verifying one triggered Salesforce Account reaches
-PostgreSQL through the Docker Compose Kafka broker. Keep real Salesforce access
-opt-in and use only the designated test Account.
+Begin Milestone 6 by choosing and documenting the customer-sync idempotency key
+and update semantics before changing the schema or handler. Use the observed
+duplicate rows from repeated delivery to drive the design.
 
 ## Important decisions
 

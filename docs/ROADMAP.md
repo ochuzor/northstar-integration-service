@@ -264,6 +264,11 @@ and the deserialized event contract against a real embedded broker.
 - The stored customer can be inspected through a narrow operational read or
   database verification mechanism.
 
+**Status:** Complete. The automated Kafka-to-PostgreSQL test passes, and a
+deliberate local smoke test persisted the designated real Salesforce Account
+through the HTTP trigger and Docker Compose Kafka broker. Repeating the trigger
+created duplicate rows as expected before Milestone 6.
+
 ## Milestone 6 — Make consumption idempotent
 
 ### Learn
