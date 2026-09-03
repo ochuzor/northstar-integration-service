@@ -202,6 +202,12 @@ Until explicitly brought into scope:
   source ID, business ID, and name. Validation failures retain only safe invalid
   field names and propagate out of the handler so Kafka cannot interpret them
   as successful processing.
+- PostgreSQL is now available through Docker Compose, and the mock ERP owns an
+  environment-backed datasource, a Flyway-managed `erp_customers` table, and a
+  JPA entity kept separate from its domain model. Testcontainers-backed
+  repository tests prove required-field persistence, generated identity,
+  lookup by Salesforce source customer ID, and nullable billing city behavior
+  against PostgreSQL.
 
 ## Current architecture
 
@@ -241,10 +247,11 @@ The MVP is finished when:
 
 ## Next task
 
-Continue Milestone 5 by adding PostgreSQL to local infrastructure and
-establishing the mock ERP persistence boundary with JPA, a versioned Flyway
-migration, and focused repository tests. Keep the Kafka listener disabled until
-the handler can persist successfully within a deliberate transaction boundary.
+Continue Milestone 5 by mapping validated ERP customers into persistence
+entities and saving them from the application handler within a deliberate
+transaction boundary. Keep the Kafka listener disabled until focused handler
+tests prove that validation occurs before persistence and persistence failures
+propagate rather than being acknowledged.
 
 ## Important decisions
 
