@@ -255,7 +255,8 @@ and the deserialized event contract against a real embedded broker.
   handler ordering, persistence, validation short-circuiting, and database
   failure propagation.**
 - PostgreSQL repository tests. **Complete with Flyway and Testcontainers.**
-- Kafka-to-database integration test for the happy path.
+- Kafka-to-database integration test for the happy path. **Complete with an
+  embedded Kafka broker and Testcontainers PostgreSQL.**
 
 ### Exit criteria
 

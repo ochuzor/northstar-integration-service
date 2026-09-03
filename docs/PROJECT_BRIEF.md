@@ -213,6 +213,10 @@ Until explicitly brought into scope:
   Validation failures stop before persistence, and database failures propagate
   back through the listener boundary instead of being treated as successful
   message handling.
+- A Kafka-to-PostgreSQL integration test now enables the listener only inside
+  its test context, publishes the version-one contract as JSON to an embedded
+  Kafka broker, and verifies the resulting customer row in a Testcontainers
+  PostgreSQL database without mocking the consumer, handler, or repository.
 
 ## Current architecture
 
@@ -252,11 +256,10 @@ The MVP is finished when:
 
 ## Next task
 
-Complete Milestone 5 with a Kafka-to-PostgreSQL integration test that enables
-the listener only for the test, publishes a version-one customer-sync event,
-and verifies the resulting ERP customer row. Then deliberately enable the
-listener for the local end-to-end flow and verify one triggered Salesforce
-Account reaches PostgreSQL.
+Complete Milestone 5 by deliberately enabling the listener for the local
+end-to-end flow and verifying one triggered Salesforce Account reaches
+PostgreSQL through the Docker Compose Kafka broker. Keep real Salesforce access
+opt-in and use only the designated test Account.
 
 ## Important decisions
 
