@@ -373,7 +373,9 @@ safe diagnosis and deliberate recovery without automatic replay loops.
   **Persistence foundation complete for integration-owned evidence: a separate
   integration-service database, Flyway-managed audit table, JPA entity, and
   correlation/event repository lookups are verified against PostgreSQL.
-  Workflow transitions and the safe lookup endpoint remain.**
+  Explicit transactions now record and transition `INITIATED`, `PUBLISHED`,
+  and `PUBLICATION_FAILED` through the synchronization workflow; the safe
+  lookup endpoint remains.**
 - Add structured, correlated logs and relevant health information.
 - Redact secrets and sensitive remote response content.
 

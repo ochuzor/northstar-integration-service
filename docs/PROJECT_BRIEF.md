@@ -261,8 +261,13 @@ Until explicitly brought into scope:
 - Integration-owned audit persistence now has an isolated PostgreSQL database,
   its own Flyway history, and a `customer_sync_audits` table. The Java boundary
   consists of an explicit status enum, a JPA entity, and lookup by correlation
-  or event ID, verified against PostgreSQL with Testcontainers. It is not yet
-  connected to synchronization orchestration.
+  or event ID, verified against PostgreSQL with Testcontainers.
+- Customer synchronization now records `INITIATED` before Kafka publication,
+  `PUBLISHED` only after broker acknowledgement, and `PUBLICATION_FAILED`
+  before rethrowing the existing sanitized publication exception. Audit writes
+  use separate `REQUIRES_NEW` transactions and the shared injectable UTC
+  `Clock`; focused and PostgreSQL-backed tests verify ordering, timestamps,
+  durable final states, and the safe `KAFKA_PUBLICATION` failure category.
 
 ## Current architecture
 
@@ -302,12 +307,11 @@ The MVP is finished when:
 
 ## Next task
 
-Connect the integration-service audit boundary to customer synchronization.
-Create an audit application service with explicit transactions, record
-`INITIATED` after event creation and before publication, transition to
-`PUBLISHED` only after broker acknowledgement, and transition to
-`PUBLICATION_FAILED` before rethrowing a sanitized publication failure. Verify
-all three paths with focused orchestration and transactional integration tests.
+Expose integration-owned audit evidence through a safe read endpoint. Define a
+response DTO that omits internal persistence details, look up by correlation
+ID, return the three owned statuses and safe identifiers/timestamps, and map an
+unknown correlation ID to `404 Not Found`. Verify the repository-to-HTTP path
+without exposing failure internals or credentials.
 
 ## Important decisions
 

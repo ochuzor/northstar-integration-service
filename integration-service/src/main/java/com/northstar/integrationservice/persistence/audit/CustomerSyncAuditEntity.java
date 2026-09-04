@@ -3,6 +3,7 @@ package com.northstar.integrationservice.persistence.audit;
 import java.time.Instant;
 import java.util.UUID;
 
+import com.northstar.integrationservice.domain.audit.CustomerSyncAuditFailureCategory;
 import com.northstar.integrationservice.domain.audit.CustomerSyncAuditStatus;
 
 import jakarta.persistence.Column;
@@ -36,15 +37,16 @@ public class CustomerSyncAuditEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "failure_category", length = 64)
-    private String failureCategory;
+    private CustomerSyncAuditFailureCategory failureCategory;
 
     protected CustomerSyncAuditEntity() {
     }
 
     public CustomerSyncAuditEntity(UUID correlationId, UUID eventId, String sourceCustomerId,
             CustomerSyncAuditStatus status, Instant createdAt, Instant updatedAt,
-            String failureCategory) {
+            CustomerSyncAuditFailureCategory failureCategory) {
         this.correlationId = correlationId;
         this.eventId = eventId;
         this.sourceCustomerId = sourceCustomerId;
@@ -78,7 +80,19 @@ public class CustomerSyncAuditEntity {
         return updatedAt;
     }
 
-    public String getFailureCategory() {
+    public CustomerSyncAuditFailureCategory getFailureCategory() {
         return failureCategory;
+    }
+
+    public void markPublished(Instant transitionTime) {
+        this.status = CustomerSyncAuditStatus.PUBLISHED;
+        this.updatedAt = transitionTime;
+        this.failureCategory = null;
+    }
+
+    public void markPublicationFailed(Instant transitionTime) {
+        this.status = CustomerSyncAuditStatus.PUBLICATION_FAILED;
+        this.updatedAt = transitionTime;
+        this.failureCategory = CustomerSyncAuditFailureCategory.KAFKA_PUBLICATION;
     }
 }
