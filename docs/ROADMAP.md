@@ -329,7 +329,10 @@ and exact known event IDs are skipped without repeating customer work.
   record, omit exception messages and stack traces, and add a safe failure
   category; broker-level tests verify the preserved record, safe category, and
   omitted exception message and stack trace.**
-- Define a small manual replay or recovery procedure.
+- Define a small manual replay or recovery procedure. **Complete in
+  `docs/OPERATIONS.md` with safe inspection, failure-specific correction,
+  deliberate single-record replay, idempotency verification, and loop
+  prevention.**
 
 ### Test
 
@@ -347,6 +350,10 @@ and exact known event IDs are skipped without repeating customer work.
 - No tested failure disappears silently or retries forever.
 - Dead-lettered work can be diagnosed and deliberately recovered.
 
+**Status:** Complete. Broker-level tests prove successful retry, exhausted
+retry, and non-retryable validation behavior. The operations runbook documents
+safe diagnosis and deliberate recovery without automatic replay loops.
+
 ## Milestone 8 — Add synchronization auditability and observability
 
 ### Learn
@@ -357,6 +364,11 @@ and exact known event IDs are skipped without repeating customer work.
 ### Build
 
 - Define initiated, published, consumed, succeeded, and failed status semantics.
+  **Decision complete: the integration service owns durable `INITIATED`,
+  `PUBLISHED`, and `PUBLICATION_FAILED`; the existing mock ERP receipt proves
+  `SUCCEEDED`; the DLT proves terminal `FAILED`; and transient `CONSUMED` state
+  is not persisted. Evidence is connected by event, correlation, and source
+  customer identifiers.**
 - Persist or expose the minimum useful synchronization audit history.
 - Add structured, correlated logs and relevant health information.
 - Redact secrets and sensitive remote response content.

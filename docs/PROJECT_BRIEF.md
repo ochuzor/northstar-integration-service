@@ -248,6 +248,16 @@ Until explicitly brought into scope:
 - A broker-level recovery test proves that a temporary failure succeeds on the
   second attempt, persists exactly one customer and processing receipt, and
   produces no dead-letter record.
+- The operations runbook documents safe DLT inspection, failure-specific
+  correction, deliberate one-record replay through the source topic, database
+  and idempotency verification, and prevention of automatic replay loops.
+- Milestone 8 audit semantics are defined at service boundaries. The integration
+  service owns durable `INITIATED`, `PUBLISHED`, and `PUBLICATION_FAILED`
+  records; the mock ERP's existing processing receipt is durable `SUCCEEDED`
+  evidence; and the Kafka DLT is durable terminal `FAILED` evidence. A transient
+  `CONSUMED` state will not be persisted because a crash could leave it stale.
+  `eventId`, `correlationId`, and `sourceCustomerId` connect the evidence, and
+  the integration service will expose its records through a safe status lookup.
 
 ## Current architecture
 
@@ -287,10 +297,11 @@ The MVP is finished when:
 
 ## Next task
 
-Complete Milestone 7 by documenting a small manual DLT diagnosis and replay
-procedure. The procedure must show how to inspect a failed record safely,
-correct the underlying cause, republish the preserved key and event to the
-source topic, and verify successful processing without automatic replay loops.
+Continue Milestone 8 by choosing the integration-service audit database layout,
+then add its persistence foundation: JPA and Flyway configuration, a first
+versioned audit-table migration, an audit entity and repository, and focused
+repository tests. Do not connect persistence to the synchronization workflow
+until this boundary is verified.
 
 ## Important decisions
 
@@ -385,10 +396,19 @@ source topic, and verify successful processing without automatic replay loops.
   correlation identifiers only after the broker acknowledges publication; a
   publication failure will produce a sanitized `503` response and will not
   claim that ERP synchronization completed.
+- Synchronization audit evidence remains owned by the service that can state it
+  truthfully. The integration service durably owns `INITIATED`, `PUBLISHED`,
+  and `PUBLICATION_FAILED`; the mock ERP processing receipt proves `SUCCEEDED`;
+  and a DLT record proves terminal `FAILED` delivery. `CONSUMED` is deliberately
+  not durable because it is an intermediate observation that could become
+  misleading after a crash. Audit evidence is connected by `eventId`,
+  `correlationId`, and `sourceCustomerId`, and integration-owned records will be
+  available through a safe lookup endpoint.
 
 ### Pending
 
-- Manual dead-letter replay workflow.
-- Audit model and success/failure semantics.
+- Integration-service audit database layout and migration details.
+- How downstream success and DLT evidence will be exposed without coupling the
+  integration service directly to the mock ERP database.
 
 Record future decisions here with enough context to explain why they were made.
