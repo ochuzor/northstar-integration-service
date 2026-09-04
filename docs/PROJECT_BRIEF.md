@@ -285,6 +285,12 @@ Until explicitly brought into scope:
   has a minimal Spring MVC runtime boundary solely to make its operational
   endpoints reachable. PostgreSQL-backed HTTP tests verify the exact public
   response and that unapproved Actuator endpoints remain unavailable.
+- A bounded Kafka connectivity indicator now contributes to readiness in both
+  services while remaining excluded from liveness. It performs a two-second
+  admin request and reports only `UP` or `DOWN`; cluster identity, broker
+  addresses, and exception details are never attached. Unit tests cover
+  successful, absent, and failed responses, while the HTTP tests prove complete
+  database-and-Kafka readiness against disposable infrastructure.
 
 ## Current architecture
 
@@ -324,10 +330,10 @@ The MVP is finished when:
 
 ## Next task
 
-Complete Milestone 8 health information with a bounded Kafka connectivity
-indicator for both services. Kafka availability should affect readiness but
-not liveness, checks must time out promptly, and responses must not reveal
-broker addresses or other environment-specific configuration.
+Complete the Milestone 8 status-transition coverage review. Build a concise
+matrix for happy, invalid, duplicate, retried, and dead-lettered flows, map each
+state to its existing durable audit, receipt, DLT, endpoint, or log evidence,
+and add only the focused tests needed to close genuine observability gaps.
 
 ## Important decisions
 

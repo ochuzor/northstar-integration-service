@@ -381,7 +381,8 @@ safe diagnosis and deliberate recovery without automatic replay loops.
   **Structured lifecycle logging complete: both services emit distinct safe
   lifecycle events with event, correlation, and source-customer identifiers.
   Safe liveness and database-backed readiness probes are exposed through the
-  health-only Actuator boundary; bounded Kafka readiness remains.**
+  health-only Actuator boundary, and bounded Kafka connectivity now contributes
+  to readiness without affecting liveness or revealing dependency details.**
 - Redact secrets and sensitive remote response content. **Lifecycle-log tests
   verify that business IDs, customer names, billing cities, Kafka keys, and
   exception details are omitted; final repository and runtime-log review
