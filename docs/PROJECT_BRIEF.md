@@ -258,6 +258,11 @@ Until explicitly brought into scope:
   `CONSUMED` state will not be persisted because a crash could leave it stale.
   `eventId`, `correlationId`, and `sourceCustomerId` connect the evidence, and
   the integration service will expose its records through a safe status lookup.
+- Integration-owned audit persistence now has an isolated PostgreSQL database,
+  its own Flyway history, and a `customer_sync_audits` table. The Java boundary
+  consists of an explicit status enum, a JPA entity, and lookup by correlation
+  or event ID, verified against PostgreSQL with Testcontainers. It is not yet
+  connected to synchronization orchestration.
 
 ## Current architecture
 
@@ -297,11 +302,12 @@ The MVP is finished when:
 
 ## Next task
 
-Continue Milestone 8 by choosing the integration-service audit database layout,
-then add its persistence foundation: JPA and Flyway configuration, a first
-versioned audit-table migration, an audit entity and repository, and focused
-repository tests. Do not connect persistence to the synchronization workflow
-until this boundary is verified.
+Connect the integration-service audit boundary to customer synchronization.
+Create an audit application service with explicit transactions, record
+`INITIATED` after event creation and before publication, transition to
+`PUBLISHED` only after broker acknowledgement, and transition to
+`PUBLICATION_FAILED` before rethrowing a sanitized publication failure. Verify
+all three paths with focused orchestration and transactional integration tests.
 
 ## Important decisions
 
@@ -404,10 +410,15 @@ until this boundary is verified.
   misleading after a crash. Audit evidence is connected by `eventId`,
   `correlationId`, and `sourceCustomerId`, and integration-owned records will be
   available through a safe lookup endpoint.
+- Local development reuses one PostgreSQL server but gives the integration
+  service its own `integration_service` database, tables, and Flyway history.
+  The mock ERP retains its `mock_erp` database, and neither service may query
+  the other's database. Spring Boot's typed datasource configuration supplies
+  the integration-service connection; Testcontainers supplies isolated test
+  databases.
 
 ### Pending
 
-- Integration-service audit database layout and migration details.
 - How downstream success and DLT evidence will be exposed without coupling the
   integration service directly to the mock ERP database.
 

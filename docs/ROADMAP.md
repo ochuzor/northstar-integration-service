@@ -370,6 +370,10 @@ safe diagnosis and deliberate recovery without automatic replay loops.
   is not persisted. Evidence is connected by event, correlation, and source
   customer identifiers.**
 - Persist or expose the minimum useful synchronization audit history.
+  **Persistence foundation complete for integration-owned evidence: a separate
+  integration-service database, Flyway-managed audit table, JPA entity, and
+  correlation/event repository lookups are verified against PostgreSQL.
+  Workflow transitions and the safe lookup endpoint remain.**
 - Add structured, correlated logs and relevant health information.
 - Redact secrets and sensitive remote response content.
 

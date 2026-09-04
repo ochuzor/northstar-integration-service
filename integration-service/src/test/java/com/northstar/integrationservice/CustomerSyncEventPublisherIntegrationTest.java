@@ -13,6 +13,7 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 import org.springframework.kafka.test.EmbeddedKafkaBroker;
@@ -28,6 +29,7 @@ import com.northstar.integrationservice.messaging.customer.CustomerSyncRequested
         "salesforce.oauth.client-id=test-client", "salesforce.oauth.client-secret=test-secret",
         "salesforce.api.version=v66.0"})
 @EmbeddedKafka(partitions = 1, topics = "northstar.customer-sync.v1", bootstrapServersProperty = "spring.kafka.bootstrap-servers")
+@Import(IntegrationPostgreSqlTestConfiguration.class)
 class CustomerSyncEventPublisherIntegrationTest {
     private static final String TOPIC = "northstar.customer-sync.v1";
 

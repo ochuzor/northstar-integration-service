@@ -40,6 +40,20 @@ source .env
 set +a
 ```
 
+On a new PostgreSQL volume, the Compose initialization script creates the
+separate `integration_service` database automatically. If the volume predates
+that script, create the database once with the existing local PostgreSQL role:
+
+```bash
+docker compose exec -T postgres \
+  createdb -U "$PG_USERNAME" --owner="$PG_USERNAME" integration_service
+```
+
+Skip this command if the database already exists. The integration service and
+mock ERP share one local PostgreSQL server for convenience but use separate
+databases and separate Flyway histories. Neither application queries the
+other's database.
+
 Confirm the effective topic names before consuming or producing records:
 
 ```bash
