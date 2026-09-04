@@ -1,12 +1,14 @@
 package com.northstar.integrationservice.application.audit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -83,6 +85,29 @@ class CustomerSyncAuditServiceTest {
         assertThat(audit.getUpdatedAt()).isEqualTo(NOW);
         assertThat(audit.getFailureCategory())
                 .isEqualTo(CustomerSyncAuditFailureCategory.KAFKA_PUBLICATION);
+    }
+
+    @Test
+    void returnsAuditByCorrelationId() {
+        CustomerSyncAuditEntity audit = new CustomerSyncAuditEntity(CORRELATION_ID, EVENT_ID,
+                "001ABC123456789", CustomerSyncAuditStatus.PUBLICATION_FAILED, NOW.minusSeconds(2),
+                NOW, CustomerSyncAuditFailureCategory.KAFKA_PUBLICATION);
+        when(repository.findById(CORRELATION_ID)).thenReturn(Optional.of(audit));
+
+        CustomerSyncAuditResult result = service.findByCorrelationId(CORRELATION_ID);
+
+        assertThat(result).isEqualTo(new CustomerSyncAuditResult(CORRELATION_ID, EVENT_ID,
+                "001ABC123456789", CustomerSyncAuditStatus.PUBLICATION_FAILED, NOW.minusSeconds(2),
+                NOW, CustomerSyncAuditFailureCategory.KAFKA_PUBLICATION));
+    }
+
+    @Test
+    void throwsAuditNotFoundWhenCorrelationIdDoesNotExist() {
+        when(repository.findById(CORRELATION_ID)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.findByCorrelationId(CORRELATION_ID))
+                .isInstanceOf(CustomerSyncAuditNotFoundException.class)
+                .hasMessage("Audit not found: " + CORRELATION_ID);
     }
 
     private CustomerSyncAuditEntity initiatedAudit() {

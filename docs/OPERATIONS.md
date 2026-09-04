@@ -63,6 +63,18 @@ DLT_TOPIC="${SOURCE_TOPIC}${DLT_SUFFIX}"
 printf 'source=%s\ndlt=%s\n' "$SOURCE_TOPIC" "$DLT_TOPIC"
 ```
 
+For integration-owned status, query the integration service with the
+correlation ID returned by the synchronization trigger:
+
+```bash
+curl -sS "http://localhost:8080/api/sync/$CORRELATION_ID"
+```
+
+The safe response reports `INITIATED`, `PUBLISHED`, or `PUBLICATION_FAILED`
+with event, source-customer, timestamp, and safe failure-category fields. A
+`404` means that this integration-service database has no record for that
+correlation ID; it does not prove that another environment has no record.
+
 ## 2. Inspect a dead-letter record
 
 Read DLT records without joining the mock ERP consumer group:

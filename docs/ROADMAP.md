@@ -375,7 +375,8 @@ safe diagnosis and deliberate recovery without automatic replay loops.
   correlation/event repository lookups are verified against PostgreSQL.
   Explicit transactions now record and transition `INITIATED`, `PUBLISHED`,
   and `PUBLICATION_FAILED` through the synchronization workflow; the safe
-  lookup endpoint remains.**
+  lookup endpoint is verified through PostgreSQL and HTTP with an exact safe
+  response-field contract.**
 - Add structured, correlated logs and relevant health information.
 - Redact secrets and sensitive remote response content.
 

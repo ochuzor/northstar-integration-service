@@ -268,6 +268,11 @@ Until explicitly brought into scope:
   use separate `REQUIRES_NEW` transactions and the shared injectable UTC
   `Clock`; focused and PostgreSQL-backed tests verify ordering, timestamps,
   durable final states, and the safe `KAFKA_PUBLICATION` failure category.
+- `GET /api/sync/{correlationId}` now exposes integration-owned audit evidence
+  through separate application and HTTP DTOs. It returns only approved IDs,
+  status, timestamps, and the safe failure category; unknown correlations
+  return a sanitized `404`. Focused MVC tests and a PostgreSQL-backed HTTP test
+  verify the repository-to-response path and exact response-field boundary.
 
 ## Current architecture
 
@@ -307,11 +312,11 @@ The MVP is finished when:
 
 ## Next task
 
-Expose integration-owned audit evidence through a safe read endpoint. Define a
-response DTO that omits internal persistence details, look up by correlation
-ID, return the three owned statuses and safe identifiers/timestamps, and map an
-unknown correlation ID to `404 Not Found`. Verify the repository-to-HTTP path
-without exposing failure internals or credentials.
+Continue Milestone 8 with structured, correlated lifecycle logging. Define the
+small set of integration and mock ERP events an operator needs, attach event,
+correlation, and source-customer identifiers where available, log safe status
+and failure categories, and verify that tokens, authorization headers,
+exception messages, and customer payloads are not logged.
 
 ## Important decisions
 

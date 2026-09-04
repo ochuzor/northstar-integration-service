@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.northstar.integrationservice.application.audit.CustomerSyncAuditNotFoundException;
 import com.northstar.integrationservice.domain.customer.CustomerValidationException;
 import com.northstar.integrationservice.messaging.customer.CustomerSyncPublicationException;
 import com.northstar.integrationservice.salesforce.account.SalesforceAccountNotFoundException;
@@ -75,6 +76,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                 .body(new ApiError("SYNC_PUBLICATION_UNAVAILABLE",
                         "Customer synchronization is temporarily unavailable"));
+    }
+
+    @ExceptionHandler(CustomerSyncAuditNotFoundException.class)
+    ResponseEntity<ApiError> handleCustomerSyncAuditNotFoundException() {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiError("SYNC_AUDIT_NOT_FOUND", "Sync audit was not found"));
     }
 
     private ResponseEntity<ApiError> salesforceUpstreamError() {

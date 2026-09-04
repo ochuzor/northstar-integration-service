@@ -44,6 +44,16 @@ public class CustomerSyncAuditService {
         audit.markPublicationFailed(Instant.now(clock));
     }
 
+    @Transactional(readOnly = true)
+    public CustomerSyncAuditResult findByCorrelationId(UUID correlationId) {
+        CustomerSyncAuditEntity audit = repository.findById(correlationId)
+                .orElseThrow(() -> new CustomerSyncAuditNotFoundException(correlationId));
+
+        return new CustomerSyncAuditResult(audit.getCorrelationId(), audit.getEventId(),
+                audit.getSourceCustomerId(), audit.getStatus(), audit.getCreatedAt(),
+                audit.getUpdatedAt(), audit.getFailureCategory());
+    }
+
     private CustomerSyncAuditEntity findAudit(UUID correlationId) {
         return repository.findById(correlationId)
                 .orElseThrow(() -> new IllegalStateException("Customer sync audit not found"));
