@@ -227,6 +227,14 @@ Until explicitly brought into scope:
   Transactional event handling creates a missing customer or updates the
   existing row's mutable details, with focused handler and PostgreSQL constraint
   tests covering both paths.
+- The Kafka-to-PostgreSQL integration test now delivers two events for the same
+  source customer and proves that the second delivery retains the row's database
+  identity, updates its mutable values, and leaves exactly one customer row.
+- The mock ERP now uses a minimal transactional inbox record keyed by `eventId`.
+  A successful customer write and its `processed_customer_sync_events` receipt
+  commit together; a known event ID is skipped, while a failure rolls back both
+  writes and remains eligible for Kafka redelivery. Processing time uses an
+  injectable UTC `Clock` for deterministic tests.
 
 ## Current architecture
 
@@ -266,9 +274,9 @@ The MVP is finished when:
 
 ## Next task
 
-Continue Milestone 6 by extending the Kafka-to-PostgreSQL integration test to
-deliver the same customer more than once with changed mutable values. Verify
-that one database row remains and contains the latest values.
+Begin Milestone 7 by defining retry ownership and classifying current consumer
+failures as retryable or non-retryable. Choose bounded attempt and backoff values
+and the dead-letter topic contract before configuring Spring Kafka retries.
 
 ## Important decisions
 
@@ -347,6 +355,11 @@ that one database row remains and contains the latest values.
   by explicitly resetting the local PostgreSQL volume before the unique
   constraint migration is applied; the migration itself will not silently
   delete duplicates.
+- Successfully processed customer-sync events are recorded by unique `eventId`.
+  Receipt presence means success and causes exact redelivery to be skipped; no
+  `PROCESSING` or `FAILED` status is stored in this table. Failed transactions
+  leave no receipt, and durable failure history is deferred to Milestone 7's
+  retry and dead-letter design.
 - Event time and UUID generation will be controllable in tests. After Kafka is
   connected, the HTTP trigger will return `202 Accepted` with safe event and
   correlation identifiers only after the broker acknowledges publication; a

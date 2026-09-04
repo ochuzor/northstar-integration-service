@@ -1,5 +1,8 @@
 package com.northstar.mockerp.application.customer;
 
+import java.time.Clock;
+import java.time.Instant;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -9,6 +12,8 @@ import com.northstar.mockerp.domain.customer.ErpCustomer;
 import com.northstar.mockerp.messaging.customer.CustomerSyncRequestedEvent;
 import com.northstar.mockerp.persistence.customer.ErpCustomerEntity;
 import com.northstar.mockerp.persistence.customer.ErpCustomerRepository;
+import com.northstar.mockerp.persistence.customer.ErpProcessedCustomerSyncEventEntity;
+import com.northstar.mockerp.persistence.customer.ErpProcessedCustomerSyncEventEntityRepository;
 
 @Component
 public class CustomerSyncEventHandler {
@@ -17,28 +22,40 @@ public class CustomerSyncEventHandler {
     private final CustomerSyncPayloadToErpCustomerMapper customerMapper;
     private final ErpCustomerValidator validator;
     private final ErpCustomerToEntityMapper entityMapper;
-    private final ErpCustomerRepository repository;
+    private final ErpCustomerRepository customerRepository;
+    private final ErpProcessedCustomerSyncEventEntityRepository syncEventEntityRepository;
+    private final Clock clock;
 
     public CustomerSyncEventHandler(CustomerSyncPayloadToErpCustomerMapper customerMapper,
             ErpCustomerValidator validator, ErpCustomerToEntityMapper entityMapper,
-            ErpCustomerRepository repository) {
+            ErpCustomerRepository customerRepository,
+            ErpProcessedCustomerSyncEventEntityRepository syncEventEntityRepository, Clock clock) {
         this.customerMapper = customerMapper;
         this.validator = validator;
         this.entityMapper = entityMapper;
-        this.repository = repository;
+        this.customerRepository = customerRepository;
+        this.syncEventEntityRepository = syncEventEntityRepository;
+        this.clock = clock;
     }
 
     @Transactional
     public void handle(String messageKey, CustomerSyncRequestedEvent event) {
+        if (syncEventEntityRepository.existsById(event.eventId())) {
+            return;
+        }
+
         ErpCustomer customer = customerMapper.map(event.customer());
         ErpCustomer validatedCustomer = validator.validate(customer);
 
-        ErpCustomerEntity customerEntity = repository
+        ErpCustomerEntity customerEntity = customerRepository
                 .findBySourceCustomerId(validatedCustomer.sourceCustomerId())
                 .map(existingCustomer -> updateExistingCustomer(existingCustomer,
                         validatedCustomer))
                 .orElseGet(() -> entityMapper.map(validatedCustomer));
-        repository.save(customerEntity);
+        customerRepository.save(customerEntity);
+
+        syncEventEntityRepository.save(new ErpProcessedCustomerSyncEventEntity(event.eventId(),
+                validatedCustomer.sourceCustomerId(), Instant.now(clock)));
 
         LOGGER.info(
                 "Received customer sync event: eventId={}, correlationId={}, businessId={}, messageKey={}",

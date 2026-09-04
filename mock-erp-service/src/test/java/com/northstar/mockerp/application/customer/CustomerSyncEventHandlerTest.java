@@ -2,6 +2,8 @@ package com.northstar.mockerp.application.customer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -9,7 +11,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -24,6 +28,8 @@ import com.northstar.mockerp.messaging.customer.CustomerSyncPayload;
 import com.northstar.mockerp.messaging.customer.CustomerSyncRequestedEvent;
 import com.northstar.mockerp.persistence.customer.ErpCustomerEntity;
 import com.northstar.mockerp.persistence.customer.ErpCustomerRepository;
+import com.northstar.mockerp.persistence.customer.ErpProcessedCustomerSyncEventEntity;
+import com.northstar.mockerp.persistence.customer.ErpProcessedCustomerSyncEventEntityRepository;
 
 class CustomerSyncEventHandlerTest {
 
@@ -34,9 +40,11 @@ class CustomerSyncEventHandlerTest {
         ErpCustomerValidator validator = mock(ErpCustomerValidator.class);
         ErpCustomerToEntityMapper entityMapper = mock(ErpCustomerToEntityMapper.class);
         ErpCustomerRepository repository = mock(ErpCustomerRepository.class);
+        ErpProcessedCustomerSyncEventEntityRepository processedEventRepository = mock(
+                ErpProcessedCustomerSyncEventEntityRepository.class);
 
         CustomerSyncEventHandler handler = new CustomerSyncEventHandler(payloadMapper, validator,
-                entityMapper, repository);
+                entityMapper, repository, processedEventRepository, fixedClock());
         CustomerSyncPayload payload = new CustomerSyncPayload("customer-id", "business-id",
                 "Customer Name", "Helsinki");
         CustomerSyncRequestedEvent event = new CustomerSyncRequestedEvent(
@@ -61,6 +69,10 @@ class CustomerSyncEventHandlerTest {
         processingOrder.verify(repository).findBySourceCustomerId("customer-id");
         processingOrder.verify(entityMapper).map(customer);
         processingOrder.verify(repository).save(entity);
+        verify(processedEventRepository).save(argThat(processedEvent -> processedEvent.getEventId()
+                .equals(event.eventId())
+                && processedEvent.getSourceCustomerId().equals("customer-id")
+                && processedEvent.getProcessedAt().equals(Instant.parse("2026-09-04T08:00:00Z"))));
     }
 
     @Test
@@ -70,9 +82,11 @@ class CustomerSyncEventHandlerTest {
         ErpCustomerValidator validator = mock(ErpCustomerValidator.class);
         ErpCustomerToEntityMapper entityMapper = mock(ErpCustomerToEntityMapper.class);
         ErpCustomerRepository repository = mock(ErpCustomerRepository.class);
+        ErpProcessedCustomerSyncEventEntityRepository processedEventRepository = mock(
+                ErpProcessedCustomerSyncEventEntityRepository.class);
 
         CustomerSyncEventHandler handler = new CustomerSyncEventHandler(payloadMapper, validator,
-                entityMapper, repository);
+                entityMapper, repository, processedEventRepository, fixedClock());
         CustomerSyncPayload payload = new CustomerSyncPayload("customer-id", null, "Customer Name",
                 null);
         CustomerSyncRequestedEvent event = new CustomerSyncRequestedEvent(
@@ -98,8 +112,10 @@ class CustomerSyncEventHandlerTest {
         ErpCustomerValidator validator = mock(ErpCustomerValidator.class);
         ErpCustomerToEntityMapper entityMapper = mock(ErpCustomerToEntityMapper.class);
         ErpCustomerRepository repository = mock(ErpCustomerRepository.class);
+        ErpProcessedCustomerSyncEventEntityRepository processedEventRepository = mock(
+                ErpProcessedCustomerSyncEventEntityRepository.class);
         CustomerSyncEventHandler handler = new CustomerSyncEventHandler(payloadMapper, validator,
-                entityMapper, repository);
+                entityMapper, repository, processedEventRepository, fixedClock());
         CustomerSyncPayload payload = new CustomerSyncPayload("customer-id", "business-id",
                 "Customer Name", "Helsinki");
         CustomerSyncRequestedEvent event = new CustomerSyncRequestedEvent(
@@ -120,6 +136,8 @@ class CustomerSyncEventHandlerTest {
         when(repository.save(entity)).thenThrow(persistenceFailure);
 
         assertThatThrownBy(() -> handler.handle("business-id", event)).isSameAs(persistenceFailure);
+        verify(processedEventRepository, never())
+                .save(any(ErpProcessedCustomerSyncEventEntity.class));
     }
 
     @Test
@@ -129,8 +147,10 @@ class CustomerSyncEventHandlerTest {
         ErpCustomerValidator validator = mock(ErpCustomerValidator.class);
         ErpCustomerToEntityMapper entityMapper = mock(ErpCustomerToEntityMapper.class);
         ErpCustomerRepository repository = mock(ErpCustomerRepository.class);
+        ErpProcessedCustomerSyncEventEntityRepository processedEventRepository = mock(
+                ErpProcessedCustomerSyncEventEntityRepository.class);
         CustomerSyncEventHandler handler = new CustomerSyncEventHandler(payloadMapper, validator,
-                entityMapper, repository);
+                entityMapper, repository, processedEventRepository, fixedClock());
         CustomerSyncPayload payload = new CustomerSyncPayload("customer-id", "new-business-id",
                 "New Customer Name", "Espoo");
         CustomerSyncRequestedEvent event = new CustomerSyncRequestedEvent(
@@ -155,5 +175,35 @@ class CustomerSyncEventHandlerTest {
         assertThat(existingEntity.getBillingCity()).isEqualTo("Espoo");
         verify(entityMapper, never()).map(customer);
         verify(repository).save(existingEntity);
+    }
+
+    @Test
+    void skipsEventWhenEventIdHasAlreadyBeenRecorded() {
+        CustomerSyncPayloadToErpCustomerMapper payloadMapper = mock(
+                CustomerSyncPayloadToErpCustomerMapper.class);
+        ErpCustomerValidator validator = mock(ErpCustomerValidator.class);
+        ErpCustomerToEntityMapper entityMapper = mock(ErpCustomerToEntityMapper.class);
+        ErpCustomerRepository repository = mock(ErpCustomerRepository.class);
+        ErpProcessedCustomerSyncEventEntityRepository processedEventRepository = mock(
+                ErpProcessedCustomerSyncEventEntityRepository.class);
+        CustomerSyncEventHandler handler = new CustomerSyncEventHandler(payloadMapper, validator,
+                entityMapper, repository, processedEventRepository, fixedClock());
+        UUID eventId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+        CustomerSyncRequestedEvent event = new CustomerSyncRequestedEvent(eventId,
+                UUID.fromString("22222222-2222-2222-2222-222222222222"),
+                Instant.parse("2026-08-28T10:15:30Z"), 1, "CUSTOMER_SYNC_REQUESTED", "SALESFORCE",
+                new CustomerSyncPayload("customer-id", "business-id", "Customer Name", "Helsinki"));
+        when(processedEventRepository.existsById(eventId)).thenReturn(true);
+
+        handler.handle("business-id", event);
+
+        verify(processedEventRepository).existsById(eventId);
+        verify(processedEventRepository, never())
+                .save(any(ErpProcessedCustomerSyncEventEntity.class));
+        verifyNoInteractions(payloadMapper, validator, entityMapper, repository);
+    }
+
+    private Clock fixedClock() {
+        return Clock.fixed(Instant.parse("2026-09-04T08:00:00Z"), ZoneOffset.UTC);
     }
 }

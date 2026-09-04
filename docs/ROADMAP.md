@@ -285,13 +285,18 @@ created duplicate rows as expected before Milestone 6.
 - Make duplicate delivery safe under the chosen update semantics. **Complete at
   the transactional handler and database-constraint boundaries; repeated Kafka
   delivery remains to be proven by integration test.**
-- Record enough processing state to distinguish duplicate, succeeded, and
-  failed attempts.
+- Record successful processing state and use it to identify exact duplicate
+  events. **Complete with a transactional receipt keyed by `eventId`; failed
+  transactions intentionally leave no success receipt. Durable failure records
+  move to Milestone 7 with retry and dead-letter handling.**
 
 ### Test
 
-- Deliver the same event repeatedly.
+- Deliver the same event repeatedly. **Complete for repeated source-customer
+  delivery through Kafka with changed mutable values.**
 - Verify no duplicate ERP customer and no incorrect repeated side effect.
+  **Complete: the integration test retains one row and its original database
+  identity while applying the latest values.**
 - Exercise a concurrency-relevant duplicate scenario where practical.
   **Complete at the database boundary: the unique constraint rejects a second
   row with the same source customer ID.**
@@ -299,6 +304,10 @@ created duplicate rows as expected before Milestone 6.
 ### Exit criteria
 
 - Duplicate Kafka delivery has a deterministic documented outcome.
+
+**Status:** Complete. Customer persistence has deterministic create-or-update
+semantics, successful event IDs are recorded atomically with customer changes,
+and exact known event IDs are skipped without repeating customer work.
 
 ## Milestone 7 — Add bounded retries and dead-letter handling
 
