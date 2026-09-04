@@ -19,7 +19,7 @@ import com.northstar.mockerp.domain.customer.ErpCustomerValidationException;
 @Configuration(proxyBeanMethods = false)
 public class CustomerSyncKafkaErrorConfiguration {
 
-    static final String FAILURE_CATEGORY_HEADER = "northstar-failure-category";
+    public static final String FAILURE_CATEGORY_HEADER = "northstar-failure-category";
 
     @Bean
     FixedBackOff customerSyncRetryBackOff(CustomerSyncConsumerProperties properties) {

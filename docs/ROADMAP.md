@@ -322,19 +322,23 @@ and exact known event IDs are skipped without repeating customer work.
 - Classify retryable and non-retryable failures. **Decision complete:
   validation is non-retryable; infrastructure and unexpected runtime failures
   are retryable with three total attempts and one-second fixed backoff.**
-- Add bounded retry behavior and a dead-letter topic. **Configuration complete;
-  broker-level behavior remains to be verified.**
+- Add bounded retry behavior and a dead-letter topic. **Complete for exhausted
+  retryable and permanent validation failures at the broker boundary.**
 - Preserve original event, correlation, failure category, and useful error
   metadata without leaking secrets. **Configured to preserve the original
   record, omit exception messages and stack traces, and add a safe failure
-  category; broker-level verification remains.**
+  category; broker-level tests verify the preserved record, safe category, and
+  omitted exception message and stack trace.**
 - Define a small manual replay or recovery procedure.
 
 ### Test
 
 - Temporary failure followed by success.
-- Exhausted transient failure routed to dead letter.
+- Exhausted transient failure routed to dead letter. **Complete with three
+  observed handler attempts and no persisted customer or processing receipt.**
 - Permanent validation failure routed without pointless repeated attempts.
+  **Complete with one observed handler attempt and no persisted customer or
+  processing receipt.**
 
 ### Exit criteria
 

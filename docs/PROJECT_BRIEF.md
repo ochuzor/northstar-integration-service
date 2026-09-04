@@ -240,6 +240,11 @@ Until explicitly brought into scope:
   initial attempt, sends validation failures directly to recovery, routes other
   exhausted records to the source topic plus `.DLT`, and omits exception
   messages and stack traces while adding a safe failure-category header.
+- Embedded-Kafka and Testcontainers tests prove that permanent validation
+  failures reach the DLT after one attempt and exhausted retryable failures
+  reach it after three attempts. Both paths preserve the original event and
+  key, expose only the safe failure category, and create neither a customer nor
+  a successful-processing receipt.
 
 ## Current architecture
 
@@ -279,10 +284,10 @@ The MVP is finished when:
 
 ## Next task
 
-Continue Milestone 7 with broker-level tests for a permanent validation failure
-and an exhausted retryable failure. Verify attempt counts, DLT destination,
-preserved original record data, safe headers, and absence of successful
-customer and processing-receipt rows.
+Continue Milestone 7 with a broker-level test for a temporary failure followed
+by success. Prove that processing succeeds within the three-attempt bound,
+persists the customer and processing receipt exactly once, and produces no DLT
+record.
 
 ## Important decisions
 
