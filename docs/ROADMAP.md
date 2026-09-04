@@ -378,7 +378,13 @@ safe diagnosis and deliberate recovery without automatic replay loops.
   lookup endpoint is verified through PostgreSQL and HTTP with an exact safe
   response-field contract.**
 - Add structured, correlated logs and relevant health information.
-- Redact secrets and sensitive remote response content.
+  **Structured lifecycle logging complete: both services emit distinct safe
+  lifecycle events with event, correlation, and source-customer identifiers;
+  relevant health information remains.**
+- Redact secrets and sensitive remote response content. **Lifecycle-log tests
+  verify that business IDs, customer names, billing cities, Kafka keys, and
+  exception details are omitted; final repository and runtime-log review
+  remains.**
 
 ### Test
 

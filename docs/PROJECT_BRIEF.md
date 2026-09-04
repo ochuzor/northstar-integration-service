@@ -273,6 +273,12 @@ Until explicitly brought into scope:
   status, timestamps, and the safe failure category; unknown correlations
   return a sanitized `404`. Focused MVC tests and a PostgreSQL-backed HTTP test
   verify the repository-to-response path and exact response-field boundary.
+- Both services now emit structured customer-synchronization lifecycle logs.
+  Integration-side initiated, published, and publication-failed events and mock
+  ERP succeeded and duplicate-skipped events carry only event, correlation, and
+  source-customer identifiers plus the safe failure category where relevant.
+  Log-capture tests verify those fields and prove that business IDs, customer
+  names, billing cities, Kafka keys, and exception details are omitted.
 
 ## Current architecture
 
@@ -312,11 +318,10 @@ The MVP is finished when:
 
 ## Next task
 
-Continue Milestone 8 with structured, correlated lifecycle logging. Define the
-small set of integration and mock ERP events an operator needs, attach event,
-correlation, and source-customer identifiers where available, log safe status
-and failure categories, and verify that tokens, authorization headers,
-exception messages, and customer payloads are not logged.
+Continue Milestone 8 with relevant application health information. Expose the
+minimum useful readiness evidence for each service and distinguish application
+liveness from dependency availability without revealing credentials, private
+URLs, or other environment-specific configuration.
 
 ## Important decisions
 

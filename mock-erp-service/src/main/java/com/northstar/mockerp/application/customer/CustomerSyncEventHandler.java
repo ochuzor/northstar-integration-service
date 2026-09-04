@@ -5,6 +5,7 @@ import java.time.Instant;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.spi.LoggingEventBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +42,8 @@ public class CustomerSyncEventHandler {
     @Transactional
     public void handle(String messageKey, CustomerSyncRequestedEvent event) {
         if (syncEventEntityRepository.existsById(event.eventId())) {
+            logLifecycleEvent("customer_sync_duplicate_skipped", event)
+                    .log("Customer synchronization duplicate skipped");
             return;
         }
 
@@ -57,9 +60,16 @@ public class CustomerSyncEventHandler {
         syncEventEntityRepository.save(new ErpProcessedCustomerSyncEventEntity(event.eventId(),
                 validatedCustomer.sourceCustomerId(), Instant.now(clock)));
 
-        LOGGER.info(
-                "Received customer sync event: eventId={}, correlationId={}, businessId={}, messageKey={}",
-                event.eventId(), event.correlationId(), validatedCustomer.businessId(), messageKey);
+        logLifecycleEvent("customer_sync_succeeded", event)
+                .log("Customer synchronization succeeded");
+    }
+
+    private LoggingEventBuilder logLifecycleEvent(String lifecycleEvent,
+            CustomerSyncRequestedEvent event) {
+        return LOGGER.atInfo().addKeyValue("event", lifecycleEvent)
+                .addKeyValue("eventId", event.eventId())
+                .addKeyValue("correlationId", event.correlationId())
+                .addKeyValue("sourceCustomerId", event.customer().sourceCustomerId());
     }
 
     private ErpCustomerEntity updateExistingCustomer(ErpCustomerEntity existingCustomer,
