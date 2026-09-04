@@ -319,10 +319,15 @@ and exact known event IDs are skipped without repeating customer work.
 
 ### Build
 
-- Classify retryable and non-retryable failures.
-- Add bounded retry behavior and a dead-letter topic.
+- Classify retryable and non-retryable failures. **Decision complete:
+  validation is non-retryable; infrastructure and unexpected runtime failures
+  are retryable with three total attempts and one-second fixed backoff.**
+- Add bounded retry behavior and a dead-letter topic. **Configuration complete;
+  broker-level behavior remains to be verified.**
 - Preserve original event, correlation, failure category, and useful error
-  metadata without leaking secrets.
+  metadata without leaking secrets. **Configured to preserve the original
+  record, omit exception messages and stack traces, and add a safe failure
+  category; broker-level verification remains.**
 - Define a small manual replay or recovery procedure.
 
 ### Test

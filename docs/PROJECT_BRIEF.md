@@ -235,6 +235,11 @@ Until explicitly brought into scope:
   commit together; a known event ID is skipped, while a failure rolls back both
   writes and remains eligible for Kafka redelivery. Processing time uses an
   injectable UTC `Clock` for deterministic tests.
+- The mock ERP now has validated, environment-backed retry and dead-letter
+  settings plus a Spring Kafka error handler. It performs two retries after the
+  initial attempt, sends validation failures directly to recovery, routes other
+  exhausted records to the source topic plus `.DLT`, and omits exception
+  messages and stack traces while adding a safe failure-category header.
 
 ## Current architecture
 
@@ -274,9 +279,10 @@ The MVP is finished when:
 
 ## Next task
 
-Begin Milestone 7 by defining retry ownership and classifying current consumer
-failures as retryable or non-retryable. Choose bounded attempt and backoff values
-and the dead-letter topic contract before configuring Spring Kafka retries.
+Continue Milestone 7 with broker-level tests for a permanent validation failure
+and an exhausted retryable failure. Verify attempt counts, DLT destination,
+preserved original record data, safe headers, and absence of successful
+customer and processing-receipt rows.
 
 ## Important decisions
 
@@ -360,6 +366,12 @@ and the dead-letter topic contract before configuring Spring Kafka retries.
   `PROCESSING` or `FAILED` status is stored in this table. Failed transactions
   leave no receipt, and durable failure history is deferred to Milestone 7's
   retry and dead-letter design.
+- Kafka consumer retry and recovery belong to the mock ERP. Validation failures
+  are non-retryable; database/infrastructure and unexpected runtime failures are
+  retryable for three total attempts with a fixed one-second backoff. Exhausted
+  and non-retryable records go to the source topic plus `.DLT`, preserving the
+  original record and safe diagnostic metadata without exposing stack traces or
+  sensitive exception messages.
 - Event time and UUID generation will be controllable in tests. After Kafka is
   connected, the HTTP trigger will return `202 Accepted` with safe event and
   correlation identifiers only after the broker acknowledges publication; a
@@ -368,7 +380,7 @@ and the dead-letter topic contract before configuring Spring Kafka retries.
 
 ### Pending
 
-- Retry ownership, retry limits, and dead-letter recovery workflow.
+- Manual dead-letter replay workflow.
 - Audit model and success/failure semantics.
 
 Record future decisions here with enough context to explain why they were made.
