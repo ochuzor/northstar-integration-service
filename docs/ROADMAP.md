@@ -333,7 +333,9 @@ and exact known event IDs are skipped without repeating customer work.
 
 ### Test
 
-- Temporary failure followed by success.
+- Temporary failure followed by success. **Complete with one simulated failure,
+  success on the second handler attempt, exactly one customer and processing
+  receipt, and no DLT record.**
 - Exhausted transient failure routed to dead letter. **Complete with three
   observed handler attempts and no persisted customer or processing receipt.**
 - Permanent validation failure routed without pointless repeated attempts.

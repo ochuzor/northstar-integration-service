@@ -1,6 +1,7 @@
 package com.northstar.mockerp;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
@@ -115,6 +116,33 @@ class CustomerSyncKafkaFailureIntegrationTest {
             verify(eventHandler, timeout(10_000).times(3)).handle(MESSAGE_KEY, event);
             verifyNoMoreInteractions(eventHandler);
             assertNoDataWasPersisted(event);
+        }
+    }
+
+    @Test
+    void retriesTemporaryFailureAndPersistsCustomerWithoutDeadLettering() throws Exception {
+        CustomerSyncRequestedEvent event = eventWithBusinessId(MESSAGE_KEY);
+        doThrow(new IllegalStateException("simulated temporary failure")).doCallRealMethod()
+                .when(eventHandler).handle(MESSAGE_KEY, event);
+
+        try (Consumer<String, String> deadLetterConsumer = createDeadLetterConsumer()) {
+            publish(event);
+
+            await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
+                assertThat(repository.count()).isEqualTo(1);
+                assertThat(repository.findBySourceCustomerId(SOURCE_CUSTOMER_ID))
+                        .hasValueSatisfying(customer -> {
+                            assertThat(customer.getBusinessId()).isEqualTo(MESSAGE_KEY);
+                            assertThat(customer.getName()).isEqualTo("Designated Test Account");
+                            assertThat(customer.getBillingCity()).isEqualTo("Helsinki");
+                        });
+                assertThat(processedEventRepository.count()).isEqualTo(1);
+                assertThat(processedEventRepository.existsById(event.eventId())).isTrue();
+            });
+
+            verify(eventHandler, timeout(10_000).times(2)).handle(MESSAGE_KEY, event);
+            verifyNoMoreInteractions(eventHandler);
+            assertThat(deadLetterConsumer.poll(Duration.ofSeconds(1))).isEmpty();
         }
     }
 

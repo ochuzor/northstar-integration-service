@@ -245,6 +245,9 @@ Until explicitly brought into scope:
   reach it after three attempts. Both paths preserve the original event and
   key, expose only the safe failure category, and create neither a customer nor
   a successful-processing receipt.
+- A broker-level recovery test proves that a temporary failure succeeds on the
+  second attempt, persists exactly one customer and processing receipt, and
+  produces no dead-letter record.
 
 ## Current architecture
 
@@ -284,10 +287,10 @@ The MVP is finished when:
 
 ## Next task
 
-Continue Milestone 7 with a broker-level test for a temporary failure followed
-by success. Prove that processing succeeds within the three-attempt bound,
-persists the customer and processing receipt exactly once, and produces no DLT
-record.
+Complete Milestone 7 by documenting a small manual DLT diagnosis and replay
+procedure. The procedure must show how to inspect a failed record safely,
+correct the underlying cause, republish the preserved key and event to the
+source topic, and verify successful processing without automatic replay loops.
 
 ## Important decisions
 
