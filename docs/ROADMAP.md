@@ -379,8 +379,9 @@ safe diagnosis and deliberate recovery without automatic replay loops.
   response-field contract.**
 - Add structured, correlated logs and relevant health information.
   **Structured lifecycle logging complete: both services emit distinct safe
-  lifecycle events with event, correlation, and source-customer identifiers;
-  relevant health information remains.**
+  lifecycle events with event, correlation, and source-customer identifiers.
+  Safe liveness and database-backed readiness probes are exposed through the
+  health-only Actuator boundary; bounded Kafka readiness remains.**
 - Redact secrets and sensitive remote response content. **Lifecycle-log tests
   verify that business IDs, customer names, billing cities, Kafka keys, and
   exception details are omitted; final repository and runtime-log review

@@ -279,6 +279,12 @@ Until explicitly brought into scope:
   source-customer identifiers plus the safe failure category where relevant.
   Log-capture tests verify those fields and prove that business IDs, customer
   names, billing cities, Kafka keys, and exception details are omitted.
+- Both services now expose safe Spring Boot Actuator liveness and readiness
+  probes. Only the health endpoint is exposed, PostgreSQL contributes to
+  readiness but not liveness, and health details are suppressed. The mock ERP
+  has a minimal Spring MVC runtime boundary solely to make its operational
+  endpoints reachable. PostgreSQL-backed HTTP tests verify the exact public
+  response and that unapproved Actuator endpoints remain unavailable.
 
 ## Current architecture
 
@@ -318,10 +324,10 @@ The MVP is finished when:
 
 ## Next task
 
-Continue Milestone 8 with relevant application health information. Expose the
-minimum useful readiness evidence for each service and distinguish application
-liveness from dependency availability without revealing credentials, private
-URLs, or other environment-specific configuration.
+Complete Milestone 8 health information with a bounded Kafka connectivity
+indicator for both services. Kafka availability should affect readiness but
+not liveness, checks must time out promptly, and responses must not reveal
+broker addresses or other environment-specific configuration.
 
 ## Important decisions
 
