@@ -296,27 +296,36 @@ Until explicitly brought into scope:
   receipt, DLT, endpoint, or structured-log evidence and the automated test
   that proves it. Exact duplicate delivery is verified through Kafka and leaves
   both customer and processing-receipt counts unchanged.
+- Final release verification now passes from a fresh isolated Kafka and
+  PostgreSQL environment through the live Salesforce trigger to one idempotent
+  mock ERP customer. A repeated request produced a second successful event
+  receipt without duplicating the customer. The root Maven release build,
+  Flyway startup, health checks, safe response/log inspection, and tracked-file
+  and Git-history secret audits also passed.
+- The root README and reproducible release checklist now document architecture,
+  responsibilities, prerequisites, safe Salesforce configuration, startup,
+  trigger and audit usage, delivery and recovery behavior, tests, limitations,
+  future work, and the AI-assisted development approach.
 
 ## Current architecture
 
-The target contains two separately runnable responsibilities—Salesforce
-integration and mock ERP consumption. They will live as separate Maven modules
-in this repository. Only the integration-service module will be created during
-the first slice; the mock ERP module will be added when its roadmap slice
-begins.
+The completed MVP contains two separately runnable Spring Boot services in one
+Maven reactor. The integration service reads Salesforce, validates and
+publishes customer events, and owns publication audit records. The mock ERP
+consumes those events, validates and persists customers idempotently, records
+successful event receipts, and routes terminal failures to a DLT. They share
+local infrastructure but own separate schemas and runtime boundaries.
 
-Initial technical baseline:
+Technical baseline:
 
 - Java 21
 - Maven Wrapper
 - Spring Boot 4.1.0, selected through Spring Initializr
-- Spring Web
-- Jackson
-- Jakarta Validation
+- Spring Web, `RestClient`, Jackson, and Jakarta Validation
+- Spring Kafka with local KRaft Kafka
+- Spring Data JPA, Flyway, and PostgreSQL
+- Embedded Kafka and Testcontainers integration testing
 - Spotless with a shared Eclipse formatter profile
-
-Kafka, PostgreSQL, JPA, Flyway, Testcontainers, and stub-server dependencies
-must be added only when their roadmap slice begins.
 
 ## Definition of finished
 
@@ -335,10 +344,11 @@ The MVP is finished when:
 
 ## Next task
 
-Begin Milestone 9 with a documented final end-to-end verification checklist.
-Define the clean-infrastructure startup procedure and the happy-path,
-idempotency, validation-failure, recovery, health, packaging, and secret-audit
-evidence required before the project can be called portfolio-ready.
+The narrow MVP and its release documentation are complete. The next task is a
+portfolio handoff: review the README from a new developer's perspective and
+prepare concise CV, LinkedIn, and interview statements that claim only the
+implemented and verified behavior. Further product features remain optional
+post-MVP work and require a new scoped decision.
 
 ## Important decisions
 

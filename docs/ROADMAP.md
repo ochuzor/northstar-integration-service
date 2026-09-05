@@ -410,24 +410,39 @@ verified through Kafka without repeating persistence.
 
 ### Build and verify
 
-- Run the complete flow from the chosen trigger to PostgreSQL.
-- Repeat it to demonstrate idempotency.
-- Exercise the missing-business-ID failure and recovery path.
-- Verify fresh infrastructure startup and Flyway migrations.
+- Run the complete flow from the chosen trigger to PostgreSQL. **Complete with
+  the designated Salesforce test Account and isolated local infrastructure.**
+- Repeat it to demonstrate idempotency. **Complete: two distinct events left
+  one current ERP customer and two successful processing receipts.**
+- Exercise the missing-business-ID failure and recovery path. **Complete
+  through deterministic boundary and broker-level tests; routine verification
+  does not mutate Salesforce merely to provoke invalid test data.**
+- Verify fresh infrastructure startup and Flyway migrations. **Complete with a
+  separate Compose project and new PostgreSQL volume.**
 - Run full Maven verification, formatting, and executable packaging.
+  **Complete through the root `./mvnw verify` release command.**
 - Audit tracked files and Git history for secrets and environment-specific data.
+  **Complete without exposing the compared local secret values.**
 
 ### Document
 
-- Architecture diagram and component responsibilities.
-- Local prerequisites, environment variables, and startup order.
-- Salesforce test-organization setup without credentials.
+- Architecture diagram and component responsibilities. **Complete in the root
+  README.**
+- Local prerequisites, environment variables, and startup order. **Complete in
+  the README and release checklist.**
+- Salesforce test-organization setup without credentials. **Complete.**
 - Kafka topics, event contract, retry/DLT policy, and recovery steps.
-- API or trigger examples, tests, limitations, and future work.
-- Honest AI-assisted development approach and portfolio claims.
+  **Complete across the README and operations runbook.**
+- API or trigger examples, tests, limitations, and future work. **Complete.**
+- Honest AI-assisted development approach and portfolio claims. **Complete.**
 
 ### Exit criteria
 
 - A new developer can clone, configure, run, test, and understand the project.
 - The repository demonstrates the complete narrow integration flow.
 - CV and LinkedIn statements claim only behavior proven by code and tests.
+
+**Status:** Complete. The release checklist records a passing clean-infrastructure
+verification on 2026-09-05, and the root README provides the architecture,
+setup, operating model, verified capabilities, limitations, and development
+disclosure needed for an honest portfolio presentation.
