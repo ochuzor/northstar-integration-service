@@ -291,6 +291,11 @@ Until explicitly brought into scope:
   addresses, and exception details are never attached. Unit tests cover
   successful, absent, and failed responses, while the HTTP tests prove complete
   database-and-Kafka readiness against disposable infrastructure.
+- The Milestone 8 observability review now maps every supported happy, invalid,
+  duplicate, recovered, and dead-lettered outcome to its audit, processing
+  receipt, DLT, endpoint, or structured-log evidence and the automated test
+  that proves it. Exact duplicate delivery is verified through Kafka and leaves
+  both customer and processing-receipt counts unchanged.
 
 ## Current architecture
 
@@ -330,10 +335,10 @@ The MVP is finished when:
 
 ## Next task
 
-Complete the Milestone 8 status-transition coverage review. Build a concise
-matrix for happy, invalid, duplicate, retried, and dead-lettered flows, map each
-state to its existing durable audit, receipt, DLT, endpoint, or log evidence,
-and add only the focused tests needed to close genuine observability gaps.
+Begin Milestone 9 with a documented final end-to-end verification checklist.
+Define the clean-infrastructure startup procedure and the happy-path,
+idempotency, validation-failure, recovery, health, packaging, and secret-audit
+evidence required before the project can be called portfolio-ready.
 
 ## Important decisions
 

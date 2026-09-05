@@ -2,6 +2,8 @@ package com.northstar.mockerp;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.verify;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -15,7 +17,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
+import com.northstar.mockerp.application.customer.CustomerSyncEventHandler;
 import com.northstar.mockerp.messaging.customer.CustomerSyncPayload;
 import com.northstar.mockerp.messaging.customer.CustomerSyncRequestedEvent;
 import com.northstar.mockerp.persistence.customer.ErpCustomerRepository;
@@ -39,6 +43,9 @@ class CustomerSyncKafkaToDatabaseIntegrationTest {
     private final ObjectMapper objectMapper;
     private final ErpCustomerRepository repository;
     private final ErpProcessedCustomerSyncEventEntityRepository processedEventRepository;
+
+    @MockitoSpyBean
+    private CustomerSyncEventHandler eventHandler;
 
     @Autowired
     CustomerSyncKafkaToDatabaseIntegrationTest(KafkaTemplate<String, String> kafkaTemplate,
@@ -124,5 +131,35 @@ class CustomerSyncKafkaToDatabaseIntegrationTest {
                         assertThat(customer.getBillingCity()).isEqualTo("Stockholm");
                     });
         });
+    }
+
+    @Test
+    void skipsExactDuplicateEventWithoutRepeatingPersistence() throws Exception {
+        CustomerSyncRequestedEvent event = new CustomerSyncRequestedEvent(
+                UUID.fromString("55555555-5555-5555-5555-555555555555"),
+                UUID.fromString("66666666-6666-6666-6666-666666666666"),
+                Instant.parse("2026-09-03T14:15:30Z"), 1, "CUSTOMER_SYNC_REQUESTED", "SALESFORCE",
+                new CustomerSyncPayload(SOURCE_CUSTOMER_ID, "NORTHSTAR-001",
+                        "Designated Test Account", "Helsinki"));
+        String json = objectMapper.writeValueAsString(event);
+
+        kafkaTemplate.send(TOPIC, event.customer().businessId(), json).get(10, TimeUnit.SECONDS);
+
+        await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
+            assertThat(repository.count()).isEqualTo(1);
+            assertThat(processedEventRepository.count()).isEqualTo(1);
+        });
+        Long originalDatabaseId = repository.findBySourceCustomerId(SOURCE_CUSTOMER_ID)
+                .orElseThrow().getId();
+
+        kafkaTemplate.send(TOPIC, event.customer().businessId(), json).get(10, TimeUnit.SECONDS);
+
+        verify(eventHandler, timeout(10_000).times(2)).handle(event.customer().businessId(), event);
+        assertThat(repository.count()).isEqualTo(1);
+        assertThat(processedEventRepository.count()).isEqualTo(1);
+        assertThat(processedEventRepository.existsById(event.eventId())).isTrue();
+        assertThat(repository.findBySourceCustomerId(SOURCE_CUSTOMER_ID)).hasValueSatisfying(
+                customer -> assertThat(customer.getId()).isEqualTo(originalDatabaseId));
+
     }
 }

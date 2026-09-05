@@ -283,8 +283,8 @@ created duplicate rows as expected before Milestone 6.
   use Salesforce `sourceCustomerId` with update semantics and database
   uniqueness.**
 - Make duplicate delivery safe under the chosen update semantics. **Complete at
-  the transactional handler and database-constraint boundaries; repeated Kafka
-  delivery remains to be proven by integration test.**
+  the transactional handler and database-constraint boundaries; exact repeated
+  Kafka delivery is proven by an integration test.**
 - Record successful processing state and use it to identify exact duplicate
   events. **Complete with a transactional receipt keyed by `eventId`; failed
   transactions intentionally leave no success receipt. Durable failure records
@@ -292,8 +292,9 @@ created duplicate rows as expected before Milestone 6.
 
 ### Test
 
-- Deliver the same event repeatedly. **Complete for repeated source-customer
-  delivery through Kafka with changed mutable values.**
+- Deliver the same event repeatedly. **Complete for both exact event redelivery
+  and repeated source-customer delivery through Kafka with changed mutable
+  values.**
 - Verify no duplicate ERP customer and no incorrect repeated side effect.
   **Complete: the integration test retains one row and its original database
   identity while applying the latest values.**
@@ -391,12 +392,19 @@ safe diagnosis and deliberate recovery without automatic replay loops.
 ### Test
 
 - Verify status transitions for happy, invalid, duplicate, retried, and
-  dead-lettered flows.
+  dead-lettered flows. **Complete. The observability matrix maps every outcome
+  to its durable or operational evidence and the focused automated tests that
+  prove it.**
 
 ### Exit criteria
 
 - An operator can answer what happened to a synchronization request without
   reading raw database tables or guessing from unrelated logs.
+
+**Status:** Complete. Integration audit state, ERP processing receipts, safe
+DLT records, correlated lifecycle logs, and dependency-aware readiness provide
+explicit evidence for every supported outcome. Exact event redelivery is also
+verified through Kafka without repeating persistence.
 
 ## Milestone 9 — Final end-to-end verification and portfolio release
 
